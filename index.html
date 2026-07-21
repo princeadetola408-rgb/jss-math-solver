@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSS MATH SOLVER</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+body { background: #0d1117; color: #c9d1d9; padding: 16px; min-height: 100vh; }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.logo { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.header h1 { font-size: 20px; font-weight: 700; color: white; }
+.header p { font-size: 12px; color: #8b949e; }
+.tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 24px; }
+.tab { background: #161b22; border: 1px solid #30363d; padding: 8px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; color: #8b949e; }
+.tab.active { background: #1f6feb; border-color: #1f6feb; color: white; }
+.section-title { color: #8b949e; font-size: 11px; font-weight: 600; margin: 20px 0 10px 0; text-transform: uppercase; }
+.example { background: #161b22; border: 1px solid #30363d; padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+.example::before { content: '>'; color: #1f6feb; margin-right: 8px; }
+.input-box { width: 100%; background: #161b22; border: 1px solid #30363d; color: white; padding: 16px; border-radius: 10px; font-size: 15px; min-height: 120px; resize: none; }
+.btn-solve { width: 100%; background: #22c55e; color: white; border: none; padding: 16px; border-radius: 10px; font-size: 16px; font-weight: 700; margin: 16px 0; cursor: pointer; }
+.btn-group { display: flex; gap: 10px; }
+.btn { flex: 1; padding: 14px; border-radius: 10px; border: 1px solid #30363d; font-weight: 600; cursor: pointer; background: #161b22; }
+.btn-clear { color: #f87171; border-color: #f87171; }
+.btn-talk { color: #a78bfa; border-color: #a78bfa; }
+.result { background: #161b22; border: 1px solid #22c55e; padding: 16px; border-radius: 10px; margin-top: 15px; display: none; }
+.result.show { display: block; }
+.result b { color: #22c55e; }
+</style>
+</head>
+<body>
+<div class="header">
+<div class="logo">🧮</div>
+<div>
+<h1>JSS MATH SOLVER</h1>
+<p>Your Smart Math Companion</p>
+</div>
+</div>
+
+<div class="tabs">
+<div class="tab active">All</div>
+<div class="tab">Arithmetic</div>
+<div class="tab">Fractions</div>
+<div class="tab">LCM/HC</div>
+</div>
+
+<div class="section-title">EXAMPLE PROBLEMS</div>
+<div class="example" onclick="fill('24 + 18 * 3')">24 + 18 * 3</div>
+<div class="example" onclick="fill('simplify 18/24')">simplify 18/24</div>
+<div class="example" onclick="fill('LCM of 12 and 18')">LCM of 12 and 18</div>
+
+<div class="section-title">ENTER YOUR PROBLEM</div>
+<textarea id="question" class="input-box" placeholder="Type your math problem here..."></textarea>
+
+<button class="btn-solve" onclick="solve()">✨ SOLVE</button>
+
+<div class="btn-group">
+<button class="btn btn-clear" onclick="clearAll()">✕ CLEAR</button>
+<button class="btn btn-talk" onclick="talk()">🔊 TALK</button>
+</div>
+
+<div id="resultBox" class="result"></div>
+
+<script>
+let lastAnswer = "";
+function fill(txt){ document.getElementById("question").value = txt; }
+
+function wordsToMath(text) {
+text = text.toLowerCase();
+text = text.replace(/√/g, "sqrt").replace(/simplify/g, "").replace(/of/g, "");
+text = text.replace(/plus/g, "+").replace(/minus/g, "-").replace(/times/g, "*").replace(/divided by/g, "/");
+return text;
+}
+
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b==0?a:gcd(b,a%b); }
+function lcm(a,b){ return (a*b)/gcd(a,b); }
+
+function solve() {
+let raw = document.getElementById("question").value;
+let q = wordsToMath(raw);
+let out = document.getElementById("resultBox"); out.classList.add("show");
+
+try {
+let n = q.match(/[0-9.]+/g);
+if(!n) throw "No numbers";
+n = n.map(Number);
+
+if(q.includes("lcm") && n.length>=2){ lastAnswer=lcm(n[0],n[1]); out.innerHTML=`<b>LCM:</b> <b>${lastAnswer}</b>`; return; }
+if(q.includes("hcf") && n.length>=2){ lastAnswer=gcd(n[0],n[1]); out.innerHTML=`<b>HCF:</b> <b>${lastAnswer}</b>`; return; }
+if(q.includes("sqrt") && n.length>=1){ lastAnswer=Math.sqrt(n[0]); out.innerHTML=`<b>√${n[0]} = ${lastAnswer}</b>`; return; }
+if(q.includes("%") && q.includes("of") && n.length>=2){ lastAnswer=(n[0]/100)*n[1]; out.innerHTML=`<b>${n[0]}% of ${n[1]} = ${lastAnswer}</b>`; return; }
+
+lastAnswer=eval(q); out.innerHTML=`<b>Answer:</b><br>${q} = <b>${lastAnswer}</b>`;
+
+} catch(e){ out.innerHTML=`<span style="color:#f87171">Error. Try: sqrt 64, 1/2+1/4, lcm 4 6</span>`; }
+}
+
+function talk(){ if(lastAnswer=="")alert("Solve something first"); else speechSynthesis.speak(new SpeechSynthesisUtterance(lastAnswer.toString())); }
+function clearAll(){ document.getElementById("question").value=""; document.getElementById("resultBox").classList.remove("show"); }
+</script>
+</body>
+</html>
