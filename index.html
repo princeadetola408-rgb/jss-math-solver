@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS MATH SOLVER </title>
+<title>JSS MATH SOLVER PRO</title>
 <style>
     body { background: linear-gradient(135deg, #0a0a0a, #001a33); color: #fff; font-family: Arial; padding: 15px; text-align: center; }
     h1 { color: #00ff88; font-size: 30px; text-shadow: 0 0 10px #00ff88; }
@@ -29,12 +29,12 @@
 </style>
 </head>
 <body>
-    <h1>📱 JSS MATH SOLVER </h1>
-    <div class="subtitle">NOW WITH HCF & LCM!</div>
+    <h1>📱 JSS MATH SOLVER PRO V5.0</h1>
+    <div class="subtitle">15 TOPICS MEGA PACK!</div>
 
     <div class="box">
         <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Enter your math question ....">
+        <input type="text" id="problemInput" placeholder="Type: percent 20 of 50 or area circle 7">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -50,7 +50,7 @@
 
         <div id="answer">Answer and steps will appear here...</div>
         <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">V4.2: 11 TOPICS | HCF, LCM, MEAN, MODE, MEDIAN, FACTORIZE, FRACTIONS, EQUATIONS, PYTHAGORAS, CALC, WORDS</div>
+        <div class="topics">V5.0: 15 TOPICS | PERCENT, AREA, VOLUME, INTEREST, HCF, LCM, MEAN, MODE, MEDIAN, FACTORIZE, FRACTIONS, EQUATIONS, PYTHAGORAS, CALC, WORDS</div>
     </div>
 
 <script>
@@ -155,14 +155,53 @@ function solveMath() {
     lastAnswerText = "";
 
     try {
-        // NEW: HCF
-        if(p.includes('hcf') || p.includes('highestcommonfactor')) {
+        // NEW: PERCENTAGE
+        if(p.includes('percent') || p.includes('%')) {
+            const nums = p.match(/\d+/g).map(Number);
+            if(p.includes('of')) {
+                let ans = (nums[0]/100) * nums[1];
+                result = `<span class="step">STEP 1:</span> ${nums[0]}% of ${nums[1]}\n<span class="step">STEP 2:</span> ${nums[0]}/100 × ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+                lastAnswerText = `The answer is ${ans}`;
+            }
+        }
+        // NEW: AREA
+        else if(p.includes('area')) {
+            const nums = p.match(/\d+/g).map(Number);
+            if(p.includes('circle')) {
+                let r = nums[0]; let area = 3.142 * r * r;
+                result = `<span class="step">STEP 1:</span> Area = πr²\n<span class="step">STEP 2:</span> 3.142 × ${r} × ${r}\n<span class="ans">✅ ANSWER: ${area.toFixed(2)} sq units</span>`;
+            }
+            else if(p.includes('rectangle')) {
+                let area = nums[0] * nums[1];
+                result = `<span class="step">STEP 1:</span> Area = Length × Breadth\n<span class="ans">✅ ANSWER: ${area} sq units</span>`;
+            }
+        }
+        // NEW: VOLUME
+        else if(p.includes('volume')) {
+            const nums = p.match(/\d+/g).map(Number);
+            if(p.includes('cube')) {
+                let vol = nums[0] * nums[0] * nums[0];
+                result = `<span class="step">STEP 1:</span> Volume = side³\n<span class="ans">✅ ANSWER: ${vol} cubic units</span>`;
+            }
+            else if(p.includes('cuboid')) {
+                let vol = nums[0] * nums[1] * nums[2];
+                result = `<span class="step">STEP 1:</span> Volume = L × B × H\n<span class="ans">✅ ANSWER: ${vol} cubic units</span>`;
+            }
+        }
+        // NEW: SIMPLE INTEREST
+        else if(p.includes('interest')) {
+            const nums = p.match(/\d+/g).map(Number);
+            let p_amt = nums[0], r = nums[1], t = nums[2];
+            let si = (p_amt * r * t)/100;
+            result = `<span class="step">STEP 1:</span> SI = (P × R × T)/100\n<span class="step">STEP 2:</span> (${p_amt} × ${r} × ${t})/100\n<span class="ans">✅ ANSWER: SI = ${si}</span>`;
+            lastAnswerText = `Simple interest is ${si}`;
+        }
+        else if(p.includes('hcf') || p.includes('highestcommonfactor')) {
             const nums = p.match(/\d+/g).map(Number);
             let hcf = nums.reduce((a,b)=>gcd(a,b));
             result = `<span class="step">STEP 1:</span> Find factors of each number\n<span class="step">STEP 2:</span> Pick highest common\n<span class="ans">✅ ANSWER: HCF = ${hcf}</span>`;
             lastAnswerText = `The HCF is ${hcf}`;
         }
-        // NEW: LCM
         else if(p.includes('lcm') || p.includes('lowestcommonmultiple')) {
             const nums = p.match(/\d+/g).map(Number);
             let l = nums.reduce((a,b)=>lcm(a,b));
@@ -228,9 +267,9 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> Calculate: ${originalQ}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: hcf 2,5,8 or lcm 4,6"; }
+        else { result = "Try: percent 20 of 50 or area circle 7 or interest 1000,5,2"; }
 
-    } catch(e) { result = "Check typing. Example: hcf 2,5,8"; }
+    } catch(e) { result = "Check typing. Example: area circle 7"; }
 
     document.getElementById('answer').innerHTML = result;
     saveHistory(originalQ, result.replace(/<[^>]*>/g, '').split('✅ ANSWER:')[1]);
