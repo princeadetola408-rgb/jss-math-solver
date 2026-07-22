@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS MATH SOLVER </title>
+<title>JSS MATH SOLVER PRO</title>
 <style>
     body { background: linear-gradient(135deg, #0a0a0a, #001a33); color: #fff; font-family: Arial; padding: 15px; text-align: center; }
     h1 { color: #00ff88; font-size: 30px; text-shadow: 0 0 10px #00ff88; }
@@ -29,12 +29,12 @@
 </style>
 </head>
 <body>
-    <h1>📱 JSS MATH SOLVER </h1>
-    <div class="subtitle">NOW WITH MODE & MEDIAN!</div>
+    <h1>📱 JSS MATH SOLVER PRO V4.2</h1>
+    <div class="subtitle">NOW WITH HCF & LCM!</div>
 
     <div class="box">
         <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Enter your math question here ....">
+        <input type="text" id="problemInput" placeholder="Type: hcf 2,5,8 or lcm 4,6">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -50,7 +50,7 @@
 
         <div id="answer">Answer and steps will appear here...</div>
         <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">V4.1: 9 TOPICS | MEAN, MODE, MEDIAN, FACTORIZE, FRACTIONS, EQUATIONS, PYTHAGORAS, CALC, WORDS</div>
+        <div class="topics">V4.2: 11 TOPICS | HCF, LCM, MEAN, MODE, MEDIAN, FACTORIZE, FRACTIONS, EQUATIONS, PYTHAGORAS, CALC, WORDS</div>
     </div>
 
 <script>
@@ -155,8 +155,21 @@ function solveMath() {
     lastAnswerText = "";
 
     try {
-        // NEW: MODE
-        if(p.includes('mode')) {
+        // NEW: HCF
+        if(p.includes('hcf') || p.includes('highestcommonfactor')) {
+            const nums = p.match(/\d+/g).map(Number);
+            let hcf = nums.reduce((a,b)=>gcd(a,b));
+            result = `<span class="step">STEP 1:</span> Find factors of each number\n<span class="step">STEP 2:</span> Pick highest common\n<span class="ans">✅ ANSWER: HCF = ${hcf}</span>`;
+            lastAnswerText = `The HCF is ${hcf}`;
+        }
+        // NEW: LCM
+        else if(p.includes('lcm') || p.includes('lowestcommonmultiple')) {
+            const nums = p.match(/\d+/g).map(Number);
+            let l = nums.reduce((a,b)=>lcm(a,b));
+            result = `<span class="step">STEP 1:</span> Find multiples\n<span class="step">STEP 2:</span> Pick lowest common\n<span class="ans">✅ ANSWER: LCM = ${l}</span>`;
+            lastAnswerText = `The LCM is ${l}`;
+        }
+        else if(p.includes('mode')) {
             const nums = p.match(/\d+/g).map(Number);
             let freq = {};
             nums.forEach(n => freq[n] = (freq[n]||0)+1);
@@ -165,7 +178,6 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> Count frequency: ${JSON.stringify(freq)}\n<span class="step">STEP 2:</span> Most frequent = ${maxFreq} times\n<span class="ans">✅ ANSWER: Mode = ${modes.join(', ')}</span>`;
             lastAnswerText = `The mode is ${modes.join(' and ')}`;
         }
-        // NEW: MEDIAN
         else if(p.includes('median')) {
             const nums = p.match(/\d+/g).map(Number).sort((a,b)=>a-b);
             let mid = Math.floor(nums.length/2);
@@ -216,9 +228,9 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> Calculate: ${originalQ}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: mode 4,5,5,6 or median 3,7,2,9"; }
+        else { result = "Try: hcf 2,5,8 or lcm 4,6"; }
 
-    } catch(e) { result = "Check typing. Example: mode 4,5,5,6"; }
+    } catch(e) { result = "Check typing. Example: hcf 2,5,8"; }
 
     document.getElementById('answer').innerHTML = result;
     saveHistory(originalQ, result.replace(/<[^>]*>/g, '').split('✅ ANSWER:')[1]);
