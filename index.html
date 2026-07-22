@@ -17,7 +17,7 @@
     #solveBtn { background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; }
     #speakBtn { background: #00ccff; color: #000; }
     #pdfBtn { background: #aa00ff; color: #fff; }
-    #clearBtn { background: #ff0044; color: #fff; } /* RED CLEAR BUTTON */
+    #clearBtn { background: #ff0044; color: #fff; }
     #historyBtn { background: #ffaa00; color: #000; }
     #timerBtn { background: #00ff88; color: #000; }
     #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 2; min-height: 150px; }
@@ -29,12 +29,12 @@
 </style>
 </head>
 <body>
-    <h1>📱 JSS MATH SOLVER PRO V3.0</h1>
+    <h1>📱 JSS MATH SOLVER PRO V3.1</h1>
     <div class="subtitle">AI TEACHER + HISTORY + PDF + EXAM MODE</div>
 
     <div class="box">
         <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Type: 3x3, 1/2+1/3, mean 5 10 15">
+        <input type="text" id="problemInput" placeholder="Type: 3x30, 1/2+1/3, mean 5 10 15">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -45,12 +45,12 @@
         <div class="btn-row">
             <button id="pdfBtn" onclick="downloadPDF()">📄 SAVE PDF</button>
             <button id="historyBtn" onclick="showHistory()">📚 HISTORY</button>
-            <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button> <!-- CLEAR BUTTON HERE -->
+            <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
         </div>
 
         <div id="answer">Answer and steps will appear here...</div>
         <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">12 TOPICS | VOICE | PDF | HISTORY | CLEAR</div>
+        <div class="topics">12 TOPICS | NOW UNDERSTANDS × AND x | VOICE | PDF | HISTORY</div>
     </div>
 
 <script>
@@ -85,7 +85,7 @@ function speakAnswer() {
     window.speechSynthesis.speak(speech);
 }
 
-function clearAll() { // THIS IS THE CLEAR BUTTON FUNCTION
+function clearAll() {
     document.getElementById('problemInput').value = "";
     document.getElementById('answer').innerHTML = "Answer and steps will appear here...";
     lastAnswerText = "";
@@ -135,7 +135,8 @@ function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
     let originalQ = document.getElementById('problemInput').value;
     p = wordsToNumbers(p);
-    p = p.replace(/x/g, 'x').replace(/equals to/g, '=').replace(/is/g, '=').replace(/\s+/g, '');
+    // FIXED: NOW UNDERSTANDS x AND × AND *
+    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/equals to/g, '=').replace(/is/g, '=').replace(/\s+/g, '');
 
     let result = "";
     lastAnswerText = "";
@@ -160,7 +161,7 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> LCD of ${b} and ${d} = ${lcd}\n<span class="step">STEP 2:</span> ${newA} ${op} ${newC} / ${lcd}\n<span class="ans">✅ ANSWER: ${ans}/${lcd}</span>`;
         }
         else if(p.includes('x') && p.includes('=')) {
-            let match = p.match(/(\d*)x([\+\-])(\d+)=(\d+)/);
+            let match = p.match(/(\d*)\*([\+\-])(\d+)=(\d+)/);
             if(match){
                 let a = match[1]==''?1:parseFloat(match[1]); let b = parseFloat(match[3]); let c = parseFloat(match[4]);
                 if(match[2]=='-') b = -b; let x = (c-b)/a;
@@ -170,10 +171,10 @@ function solveMath() {
         }
         else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
             let ans = eval(p);
-            result = `<span class="ans">✅ ANSWER: ${ans}</span>`;
+            result = `<span class="step">STEP 1:</span> Calculate: ${originalQ}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: mean 5 10 15 or pythagoras 3 4 or 1/2+1/3"; }
+        else { result = "Try: 3x30 or 1/2+1/3 or mean 5 10 15"; }
 
     } catch(e) { result = "Check typing. Example: 2x+5=16"; }
 
