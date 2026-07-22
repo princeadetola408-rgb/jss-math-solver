@@ -26,7 +26,7 @@
     <div class="subtitle">AI TEACHER - Voice + Steps + Real Math</div>
 
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Try: Solve 2X +5 equals to 50">
+        <input type="text" id="problemInput" placeholder="Try: 2X +5 equals to 16">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -43,7 +43,7 @@
 let lastAnswerText = "";
 
 function wordsToNumbers(text) {
-    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10};
+    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16};
     let newText = text;
     for(let word in words) { newText = newText.replace(new RegExp(word, "gi"), words[word]); }
     return newText;
@@ -81,22 +81,26 @@ function lcm(a,b){ return (a*b)/gcd(a,b) }
 function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
     p = wordsToNumbers(p);
-    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/equals to/g, '=').replace(/equal to/g, '=').replace(/is/g, '=');
+    p = p.replace(/x/g, 'x').replace(/×/g, '*').replace(/equals to/g, '=').replace(/equal to/g, '=').replace(/is/g, '=').replace(/plus/g, '+').replace(/minus/g, '-');
+    p = p.replace(/\s+/g, ''); // REMOVE ALL SPACES
     
     let result = "";
     lastAnswerText = "";
 
     try {
-        // ALGEBRA WITH "EQUALS TO"
+        // SMART ALGEBRA: 2x+5=16
         if(p.includes('x') && p.includes('=')) {
-            let parts = p.match(/(\d+)\*?x \+ (\d+) = (\d+)/);
-            if(!parts) parts = p.match(/(\d+)\*?x - (\d+) = (\d+)/);
-            if(parts) {
-                let a=parseFloat(parts[1]), b=parseFloat(parts[2]), c=parseFloat(parts[3]); 
-                if(p.includes('-')) b = -b;
+            let match = p.match(/(\d*)x([\+\-])(\d+)=(\d+)/);
+            if(match) {
+                let a = match[1]==''?1:parseFloat(match[1]);
+                let sign = match[2];
+                let b = parseFloat(match[3]);
+                let c = parseFloat(match[4]);
+                if(sign=='-') b = -b;
+                
                 let x = (c-b)/a;
-                result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n`;
-                result += `<span class="step">STEP 2:</span> ${a}x = ${c} - ${b}\n`;
+                result = `<span class="step">STEP 1:</span> ${a}x ${sign} ${Math.abs(b)} = ${c}\n`;
+                result += `<span class="step">STEP 2:</span> ${a}x = ${c} ${sign=='-'?'+':'-'} ${Math.abs(b)}\n`;
                 result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
                 result += `<span class="step">STEP 4:</span> x = ${c-b}/${a}\n`;
                 result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
@@ -107,9 +111,8 @@ function solveMath() {
             const nums = p.match(/\d+/g);
             let a = parseInt(nums[0]), b = parseInt(nums[1]);
             let ans = lcm(a,b);
-            result = `<span class="step">STEP 1:</span> List multiples of ${a}: ${a}, ${a*2}, ${a*3}\n`;
-            result += `<span class="step">STEP 2:</span> List multiples of ${b}: ${b}, ${b*2}, ${b*3}\n`;
-            result += `<span class="step">STEP 3:</span> Common multiple = ${ans}\n`;
+            result = `<span class="step">STEP 1:</span> Multiples of ${a}: ${a}, ${a*2}, ${a*3}\n`;
+            result += `<span class="step">STEP 2:</span> Multiples of ${b}: ${b}, ${b*2}, ${b*3}\n`;
             result += `<span class="ans">✅ ANSWER: ${ans}</span>`;
         }
         else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
@@ -117,9 +120,9 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: Solve 2x + 5 equals to 50"; }
+        else { result = "Try: 2x+5=16"; }
 
-    } catch(e) { result = "Check your typing. Example: solve 2x + 5 = 50"; }
+    } catch(e) { result = "Check your typing. Example: 2x+5=16"; }
 
     document.getElementById('answer').innerHTML = result;
 }
