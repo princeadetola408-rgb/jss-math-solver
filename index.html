@@ -19,7 +19,6 @@
     #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 2; min-height: 150px; }
 .step { color: #00ccff; font-weight: bold; }
 .ans { color: #ff8800; font-weight: bold; font-size: 20px; }
-.topics { font-size: 12px; color: #888; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -27,7 +26,7 @@
     <div class="subtitle">AI TEACHER - Voice + Steps + Real Math</div>
 
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Try: LCM of eight and 12">
+        <input type="text" id="problemInput" placeholder="Try: Solve 2X +5 equals to 50">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -38,27 +37,18 @@
         <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
 
         <div id="answer">Answer and steps will appear here...</div>
-        <div class="topics">Supports: +, -, x, /, %, LCM, HCF, Fractions, Algebra, Area</div>
     </div>
 
 <script>
 let lastAnswerText = "";
 
-// CONVERT WORDS TO NUMBERS
 function wordsToNumbers(text) {
-    const words = {
-        "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,
-        "eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,
-        "twenty":20,"thirty":30,"forty":40,"fifty":50,"sixty":60,"seventy":70,"eighty":80,"ninety":90,"hundred":100
-    };
+    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10};
     let newText = text;
-    for(let word in words) {
-        newText = newText.replace(new RegExp(word, "gi"), words[word]);
-    }
+    for(let word in words) { newText = newText.replace(new RegExp(word, "gi"), words[word]); }
     return newText;
 }
 
-// LISTEN
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 recognition.lang = 'en-US';
@@ -71,7 +61,6 @@ recognition.onresult = (e) => {
     document.getElementById('listenBtn').innerText = "🎤 LISTEN";
 }
 
-// SPEAK
 function speakAnswer() {
     if(lastAnswerText === "") { alert("Solve first!"); return; }
     const speech = new SpeechSynthesisUtterance(lastAnswerText);
@@ -79,7 +68,6 @@ function speakAnswer() {
     window.speechSynthesis.speak(speech);
 }
 
-// CLEAR
 function clearAll() {
     document.getElementById('problemInput').value = "";
     document.getElementById('answer').innerHTML = "Answer and steps will appear here...";
@@ -87,74 +75,51 @@ function clearAll() {
     window.speechSynthesis.cancel();
 }
 
-// MATH HELPERS
 function gcd(a,b){ return b==0?a:gcd(b,a%b) }
 function lcm(a,b){ return (a*b)/gcd(a,b) }
 
-// REAL MATH SOLVER WITH STEPS
 function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
     p = wordsToNumbers(p);
+    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/equals to/g, '=').replace(/equal to/g, '=').replace(/is/g, '=');
     
     let result = "";
     lastAnswerText = "";
-    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
 
     try {
-        // LCM WITH FULL STEPS
-        if(p.includes('lcm')) {
+        // ALGEBRA WITH "EQUALS TO"
+        if(p.includes('x') && p.includes('=')) {
+            let parts = p.match(/(\d+)\*?x \+ (\d+) = (\d+)/);
+            if(!parts) parts = p.match(/(\d+)\*?x - (\d+) = (\d+)/);
+            if(parts) {
+                let a=parseFloat(parts[1]), b=parseFloat(parts[2]), c=parseFloat(parts[3]); 
+                if(p.includes('-')) b = -b;
+                let x = (c-b)/a;
+                result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n`;
+                result += `<span class="step">STEP 2:</span> ${a}x = ${c} - ${b}\n`;
+                result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
+                result += `<span class="step">STEP 4:</span> x = ${c-b}/${a}\n`;
+                result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
+                lastAnswerText = `The answer is x equals ${x}`;
+            }
+        }
+        else if(p.includes('lcm')) {
             const nums = p.match(/\d+/g);
             let a = parseInt(nums[0]), b = parseInt(nums[1]);
             let ans = lcm(a,b);
-            result = `<span class="step">STEP 1:</span> List multiples of ${a}: ${a}, ${a*2}, ${a*3}, ${a*4}, ${a*5}, ${a*6}\n`;
+            result = `<span class="step">STEP 1:</span> List multiples of ${a}: ${a}, ${a*2}, ${a*3}\n`;
             result += `<span class="step">STEP 2:</span> List multiples of ${b}: ${b}, ${b*2}, ${b*3}\n`;
             result += `<span class="step">STEP 3:</span> Common multiple = ${ans}\n`;
             result += `<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `To find LCM of ${a} and ${b}, the answer is ${ans}`;
         }
-        // HCF WITH STEPS
-        else if(p.includes('hcf')) {
-            const nums = p.match(/\d+/g);
-            let a = parseInt(nums[0]), b = parseInt(nums[1]);
-            let ans = gcd(a,b);
-            result = `<span class="step">STEP 1:</span> Factors of ${a}: 1,2,3,4,6,${a}\n`;
-            result += `<span class="step">STEP 2:</span> Factors of ${b}: 1,2,3,6,9,${b}\n`;
-            result += `<span class="step">STEP 3:</span> Highest common factor = ${ans}\n`;
-            result += `<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `The HCF of ${a} and ${b} is ${ans}`;
-        }
-        // PERCENT WITH STEPS
-        else if(p.includes('percent')) {
-            const nums = p.match(/\d+\.?\d*/g);
-            let num = nums[0], per = nums[1];
-            let ans = num*per/100;
-            result = `<span class="step">STEP 1:</span> Formula: ${per}% of ${num}\n`;
-            result += `<span class="step">STEP 2:</span> = ${num} x ${per}/100\n`;
-            result += `<span class="step">STEP 3:</span> = ${num*per}/100\n`;
-            result += `<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `${per} percent of ${num} is ${ans}`;
-        }
-        // ALGEBRA WITH STEPS
-        else if(p.includes('x') && p.includes('=')) {
-            let parts = p.match(/(\d+)x \+ (\d+) = (\d+)/);
-            let a=parts[1], b=parts[2], c=parts[3]; 
-            let x = (c-b)/a;
-            result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n`;
-            result += `<span class="step">STEP 2:</span> ${a}x = ${c} - ${b}\n`;
-            result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
-            result += `<span class="step">STEP 4:</span> x = ${c-b}/${a}\n`;
-            result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
-            lastAnswerText = `The answer is x equals ${x}`;
-        }
-        // BASIC MATH
         else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
             let ans = eval(p);
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: LCM of 8 and 12"; }
+        else { result = "Try: Solve 2x + 5 equals to 50"; }
 
-    } catch(e) { result = "Check your typing. Example: LCM of 8 and 12"; }
+    } catch(e) { result = "Check your typing. Example: solve 2x + 5 = 50"; }
 
     document.getElementById('answer').innerHTML = result;
 }
