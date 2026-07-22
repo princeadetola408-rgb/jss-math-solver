@@ -29,12 +29,12 @@
 </style>
 </head>
 <body>
-    <h1>📱 JSS MATH SOLVER PRO V3.1</h1>
-    <div class="subtitle">AI TEACHER + HISTORY + PDF + EXAM MODE</div>
+    <h1>📱 JSS MATH SOLVER PRO V3.2</h1>
+    <div class="subtitle">NOW UNDERSTANDS ENGLISH!</div>
 
     <div class="box">
         <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Type: 3x30, 1/2+1/3, mean 5 10 15">
+        <input type="text" id="problemInput" placeholder="Type: Find mean of 4,8 and 12">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -50,7 +50,7 @@
 
         <div id="answer">Answer and steps will appear here...</div>
         <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">12 TOPICS | NOW UNDERSTANDS × AND x | VOICE | PDF | HISTORY</div>
+        <div class="topics">V3.2: UNDERSTANDS "mean of", "average", COMMAS | 12 TOPICS</div>
     </div>
 
 <script>
@@ -135,17 +135,17 @@ function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
     let originalQ = document.getElementById('problemInput').value;
     p = wordsToNumbers(p);
-    // FIXED: NOW UNDERSTANDS x AND × AND *
-    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/equals to/g, '=').replace(/is/g, '=').replace(/\s+/g, '');
+    p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/equals to/g, '=').replace(/is/g, '=').replace(/and/g, ',').replace(/\s+/g, '');
 
     let result = "";
     lastAnswerText = "";
 
     try {
-        if(p.startsWith('mean')) {
+        // NEW: UNDERSTANDS MEAN/AVERAGE
+        if(p.includes('mean') || p.includes('average')) {
             const nums = p.match(/\d+/g).map(Number);
             let sum = nums.reduce((a,b)=>a+b,0); let mean = sum/nums.length;
-            result = `<span class="step">STEP 1:</span> Sum = ${sum}\n<span class="step">STEP 2:</span> Mean = ${sum}/${nums.length}\n<span class="ans">✅ ANSWER: ${mean}</span>`;
+            result = `<span class="step">STEP 1:</span> Add numbers: ${nums.join(' + ')} = ${sum}\n<span class="step">STEP 2:</span> Divide by ${nums.length} numbers\n<span class="ans">✅ ANSWER: Mean = ${mean}</span>`;
             lastAnswerText = `The mean is ${mean}`;
         }
         else if(p.startsWith('pythagoras')) {
@@ -160,7 +160,7 @@ function solveMath() {
             let lcd = lcm(b,d); let newA = a*(lcd/b), newC = c*(lcd/d); let ans = op=='+'? newA+newC : newA-newC;
             result = `<span class="step">STEP 1:</span> LCD of ${b} and ${d} = ${lcd}\n<span class="step">STEP 2:</span> ${newA} ${op} ${newC} / ${lcd}\n<span class="ans">✅ ANSWER: ${ans}/${lcd}</span>`;
         }
-        else if(p.includes('x') && p.includes('=')) {
+        else if(p.includes('*') && p.includes('=')) {
             let match = p.match(/(\d*)\*([\+\-])(\d+)=(\d+)/);
             if(match){
                 let a = match[1]==''?1:parseFloat(match[1]); let b = parseFloat(match[3]); let c = parseFloat(match[4]);
@@ -174,9 +174,9 @@ function solveMath() {
             result = `<span class="step">STEP 1:</span> Calculate: ${originalQ}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: 3x30 or 1/2+1/3 or mean 5 10 15"; }
+        else { result = "Try: Find mean of 4,8 and 12"; }
 
-    } catch(e) { result = "Check typing. Example: 2x+5=16"; }
+    } catch(e) { result = "Check typing. Example: Find mean of 4,8 and 12"; }
 
     document.getElementById('answer').innerHTML = result;
     saveHistory(originalQ, result.replace(/<[^>]*>/g, '').split('✅ ANSWER:')[1]);
