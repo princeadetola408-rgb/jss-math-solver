@@ -12,13 +12,14 @@
     input { width: 95%; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #00ff88; background: #000; color: #fff; margin-bottom: 10px; }
 .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
     button { flex: 1; padding: 15px; font-size: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-    #listenBtn { background: #ff8800; color: #000; } /* ORANGE */
-    #solveBtn { background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; } /* GREEN */
-    #speakBtn { background: #00ccff; color: #000; } /* BLUE */
-    #clearBtn { background: #ff0044; color: #fff; width: 100%; } /* RED CLEAR */
-    #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 1.8; min-height: 100px; }
+    #listenBtn { background: #ff8800; color: #000; }
+    #solveBtn { background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; }
+    #speakBtn { background: #00ccff; color: #000; }
+    #clearBtn { background: #ff0044; color: #fff; width: 100%; }
+    #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 1.8; min-height: 120px; }
 .step { color: #00ccff; }
 .ans { color: #ff8800; font-weight: bold; font-size: 20px; }
+.topics { font-size: 12px; color: #888; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -26,7 +27,7 @@
     <div class="subtitle">AI TEACHER - Voice + Steps + Real Math</div>
 
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Type: 3x3, 12+5, 10 percent of 500">
+        <input type="text" id="problemInput" placeholder="Try: 1/2+1/4, HCF 12 18, Area 5 10">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -34,9 +35,10 @@
             <button id="speakBtn" onclick="speakAnswer()">🔊 SPEAK</button>
         </div>
 
-        <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button> <!-- NEW BUTTON -->
+        <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
 
         <div id="answer">Answer and steps will appear here...</div>
+        <div class="topics">Supports: +, -, x, /, %, LCM, HCF, Fractions, Algebra, Area</div>
     </div>
 
 <script>
@@ -63,37 +65,77 @@ function speakAnswer() {
     window.speechSynthesis.speak(speech);
 }
 
-// CLEAR BUTTON FUNCTION
+// CLEAR
 function clearAll() {
     document.getElementById('problemInput').value = "";
     document.getElementById('answer').innerHTML = "Answer and steps will appear here...";
     lastAnswerText = "";
-    window.speechSynthesis.cancel(); // Stop speaking if it's talking
+    window.speechSynthesis.cancel();
 }
+
+// MATH HELPERS
+function gcd(a,b){ return b==0?a:gcd(b,a%b) }
+function lcm(a,b){ return (a*b)/gcd(a,b) }
 
 // REAL MATH SOLVER
 function solveMath() {
-    let p = document.getElementById('problemInput').value;
+    let p = document.getElementById('problemInput').value.toLowerCase();
     let result = "";
     lastAnswerText = "";
 
     p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
 
     try {
-        if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
+        // 1. FRACTIONS: 1/2 + 1/4
+        if(p.includes('/')) {
             let ans = eval(p);
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else if(p.toLowerCase().includes('percent')) {
+        // 2. HCF
+        else if(p.includes('hcf')) {
+            const nums = p.match(/\d+/g);
+            let ans = gcd(parseInt(nums[0]), parseInt(nums[1]));
+            result = `<span class="step">STEP 1:</span> Find HCF of ${nums[0]} and ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The HCF of ${nums[0]} and ${nums[1]} is ${ans}`;
+        }
+        // 3. AREA: Area 5 10 = Rectangle
+        else if(p.includes('area')) {
+            const nums = p.match(/\d+/g);
+            let ans = nums[0] * nums[1];
+            result = `<span class="step">STEP 1:</span> Area = Length x Breadth\n<span class="step">STEP 2:</span> ${nums[0]} x ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The area is ${ans}`;
+        }
+        // 4. LCM
+        else if(p.includes('lcm')) {
+            const nums = p.match(/\d+/g);
+            let ans = lcm(nums[0], nums[1]);
+            result = `<span class="step">STEP 1:</span> Find LCM of ${nums[0]} and ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The LCM of ${nums[0]} and ${nums[1]} is ${ans}`;
+        }
+        // 5. PERCENT
+        else if(p.includes('percent')) {
             const nums = p.match(/\d+\.?\d*/g);
             let ans = nums[0]*nums[1]/100;
             result = `<span class="step">STEP 1:</span> ${nums[1]}% of ${nums[0]} = ${nums[0]} x ${nums[1]}/100\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: 3x3, 12+5, 10 percent of 500"; }
+        // 6. ALGEBRA
+        else if(p.includes('x') && p.includes('=')) {
+            let a = parseFloat(p.match(/(\d+)x/)[1]); let b = parseFloat(p.match(/x \+ (\d+)/)[1]); let c = parseFloat(p.match(/= (\d+)/)[1]);
+            let x = (c-b)/a;
+            result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n<span class="step">STEP 2:</span> x = ${(c-b)}/${a}\n<span class="ans">✅ ANSWER: x = ${x}</span>`;
+            lastAnswerText = `The answer is x equals ${x}`;
+        }
+        // 7. BASIC MATH
+        else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
+            let ans = eval(p);
+            result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The answer is ${ans}`;
+        }
+        else { result = "Try: 1/2+1/4, HCF 12 18, Area 5 10"; }
 
-    } catch(e) { result = "Error. Try: 3*3 or 3x3"; }
+    } catch(e) { result = "Check your typing. Example: 1/2+1/4"; }
 
     document.getElementById('answer').innerHTML = result;
 }
