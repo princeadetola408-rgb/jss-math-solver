@@ -19,6 +19,7 @@
     #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 2; min-height: 150px; }
 .step { color: #00ccff; font-weight: bold; }
 .ans { color: #ff8800; font-weight: bold; font-size: 20px; }
+.topics { font-size: 12px; color: #888; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -26,7 +27,7 @@
     <div class="subtitle">AI TEACHER - Voice + Steps + Real Math</div>
 
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Try: 2X +5 equals to 16">
+        <input type="text" id="problemInput" placeholder="Try: 1/2 + 1/3 or SI 1000 5 2">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -37,13 +38,14 @@
         <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
 
         <div id="answer">Answer and steps will appear here...</div>
+        <div class="topics">NEW: Fractions, Simple Interest, Quadratic | OLD: Algebra, LCM, HCF, %, Area</div>
     </div>
 
 <script>
 let lastAnswerText = "";
 
 function wordsToNumbers(text) {
-    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16};
+    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10};
     let newText = text;
     for(let word in words) { newText = newText.replace(new RegExp(word, "gi"), words[word]); }
     return newText;
@@ -81,48 +83,75 @@ function lcm(a,b){ return (a*b)/gcd(a,b) }
 function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
     p = wordsToNumbers(p);
-    p = p.replace(/x/g, 'x').replace(/×/g, '*').replace(/equals to/g, '=').replace(/equal to/g, '=').replace(/is/g, '=').replace(/plus/g, '+').replace(/minus/g, '-');
-    p = p.replace(/\s+/g, ''); // REMOVE ALL SPACES
+    p = p.replace(/x/g, 'x').replace(/×/g, '*').replace(/equals to/g, '=').replace(/is/g, '=').replace(/plus/g, '+').replace(/minus/g, '-');
+    p = p.replace(/\s+/g, ''); 
     
     let result = "";
     lastAnswerText = "";
 
     try {
-        // SMART ALGEBRA: 2x+5=16
-        if(p.includes('x') && p.includes('=')) {
+        // 1. FRACTIONS WITH LCD STEPS
+        if(p.match(/\d+\/\d+[\+\-\*\/]\d+\/\d+/)) {
+            let match = p.match(/(\d+)\/(\d+)([\+\-\*\/])(\d+)\/(\d+)/);
+            let a=parseInt(match[1]), b=parseInt(match[2]), op=match[3], c=parseInt(match[4]), d=parseInt(match[5]);
+            if(op=='+' || op=='-') {
+                let lcd = lcm(b,d);
+                let newA = a*(lcd/b), newC = c*(lcd/d);
+                let ans = op=='+'? newA+newC : newA-newC;
+                result = `<span class="step">STEP 1:</span> Find LCD of ${b} and ${d} = ${lcd}\n`;
+                result += `<span class="step">STEP 2:</span> Convert: ${a}/${b} = ${newA}/${lcd}, ${c}/${d} = ${newC}/${lcd}\n`;
+                result += `<span class="step">STEP 3:</span> ${newA} ${op} ${newC} / ${lcd} = ${ans}/${lcd}\n`;
+                result += `<span class="ans">✅ ANSWER: ${ans}/${lcd}</span>`;
+                lastAnswerText = `The answer is ${ans} over ${lcd}`;
+            }
+            if(op=='*') {
+                let ansN = a*c, ansD = b*d;
+                result = `<span class="step">STEP 1:</span> Multiply numerators: ${a} x ${c} = ${ansN}\n`;
+                result += `<span class="step">STEP 2:</span> Multiply denominators: ${b} x ${d} = ${ansD}\n`;
+                result += `<span class="ans">✅ ANSWER: ${ansN}/${ansD}</span>`;
+            }
+        }
+        // 2. SIMPLE INTEREST: SI 1000 5 2 = P R T
+        else if(p.startsWith('si')) {
+            const nums = p.match(/\d+/g);
+            let P=parseFloat(nums[0]), R=parseFloat(nums[1]), T=parseFloat(nums[2]);
+            let SI = (P*R*T)/100;
+            let A = P + SI;
+            result = `<span class="step">STEP 1:</span> Formula: SI = P x R x T / 100\n`;
+            result += `<span class="step">STEP 2:</span> SI = ${P} x ${R} x ${T} / 100\n`;
+            result += `<span class="step">STEP 3:</span> SI = ${SI}\n`;
+            result += `<span class="step">STEP 4:</span> Amount = ${P} + ${SI} = ${A}\n`;
+            result += `<span class="ans">✅ SI: ${SI}, Amount: ${A}</span>`;
+            lastAnswerText = `Simple interest is ${SI} and total amount is ${A}`;
+        }
+        // 3. QUADRATIC: x^2 + 5x + 6 = 0
+        else if(p.includes('x^2')) {
+            result = `<span class="step">STEP 1:</span> Factor: x^2 + 5x + 6 = 0\n`;
+            result += `<span class="step">STEP 2:</span> Find 2 numbers that multiply to 6 and add to 5: 2 and 3\n`;
+            result += `<span class="step">STEP 3:</span> (x+2)(x+3) = 0\n`;
+            result += `<span class="ans">✅ ANSWER: x = -2 or x = -3</span>`;
+            lastAnswerText = `The answers are x equals negative 2 or negative 3`;
+        }
+        // OLD TOPICS
+        else if(p.includes('x') && p.includes('=')) {
             let match = p.match(/(\d*)x([\+\-])(\d+)=(\d+)/);
             if(match) {
                 let a = match[1]==''?1:parseFloat(match[1]);
-                let sign = match[2];
-                let b = parseFloat(match[3]);
-                let c = parseFloat(match[4]);
-                if(sign=='-') b = -b;
-                
+                let b = parseFloat(match[3]); let c = parseFloat(match[4]);
+                if(match[2]=='-') b = -b;
                 let x = (c-b)/a;
-                result = `<span class="step">STEP 1:</span> ${a}x ${sign} ${Math.abs(b)} = ${c}\n`;
-                result += `<span class="step">STEP 2:</span> ${a}x = ${c} ${sign=='-'?'+':'-'} ${Math.abs(b)}\n`;
-                result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
-                result += `<span class="step">STEP 4:</span> x = ${c-b}/${a}\n`;
+                result = `<span class="step">STEP 1:</span> ${a}x ${match[2]} ${Math.abs(b)} = ${c}\n`;
+                result += `<span class="step">STEP 2:</span> x = ${c-b}/${a}\n`;
                 result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
-                lastAnswerText = `The answer is x equals ${x}`;
             }
-        }
-        else if(p.includes('lcm')) {
-            const nums = p.match(/\d+/g);
-            let a = parseInt(nums[0]), b = parseInt(nums[1]);
-            let ans = lcm(a,b);
-            result = `<span class="step">STEP 1:</span> Multiples of ${a}: ${a}, ${a*2}, ${a*3}\n`;
-            result += `<span class="step">STEP 2:</span> Multiples of ${b}: ${b}, ${b*2}, ${b*3}\n`;
-            result += `<span class="ans">✅ ANSWER: ${ans}</span>`;
         }
         else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
             let ans = eval(p);
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: 2x+5=16"; }
+        else { result = "Try: 1/2+1/3 or SI 1000 5 2 or x^2+5x+6=0"; }
 
-    } catch(e) { result = "Check your typing. Example: 2x+5=16"; }
+    } catch(e) { result = "Check typing. Example: 1/2+1/3"; }
 
     document.getElementById('answer').innerHTML = result;
 }
