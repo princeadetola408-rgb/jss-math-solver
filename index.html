@@ -27,7 +27,7 @@
     <div class="subtitle">AI TEACHER - Voice + Steps + Real Math</div>
 
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Try: 1/2+1/4, HCF 12 18, Area 5 10">
+        <input type="text" id="problemInput" placeholder="Try: LCM of eight and 12">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -43,6 +43,20 @@
 
 <script>
 let lastAnswerText = "";
+
+// CONVERT WORDS TO NUMBERS
+function wordsToNumbers(text) {
+    const words = {
+        "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,
+        "eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,
+        "twenty":20,"thirty":30,"forty":40,"fifty":50,"sixty":60,"seventy":70,"eighty":80,"ninety":90,"hundred":100
+    };
+    let newText = text;
+    for(let word in words) {
+        newText = newText.replace(new RegExp(word, "gi"), words[word]);
+    }
+    return newText;
+}
 
 // LISTEN
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -80,62 +94,56 @@ function lcm(a,b){ return (a*b)/gcd(a,b) }
 // REAL MATH SOLVER
 function solveMath() {
     let p = document.getElementById('problemInput').value.toLowerCase();
+    p = wordsToNumbers(p); // <-- CONVERT "eight" TO "8"
+    
     let result = "";
     lastAnswerText = "";
-
     p = p.replace(/x/g, '*').replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
 
     try {
-        // 1. FRACTIONS: 1/2 + 1/4
         if(p.includes('/')) {
             let ans = eval(p);
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        // 2. HCF
         else if(p.includes('hcf')) {
             const nums = p.match(/\d+/g);
             let ans = gcd(parseInt(nums[0]), parseInt(nums[1]));
             result = `<span class="step">STEP 1:</span> Find HCF of ${nums[0]} and ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The HCF of ${nums[0]} and ${nums[1]} is ${ans}`;
         }
-        // 3. AREA: Area 5 10 = Rectangle
         else if(p.includes('area')) {
             const nums = p.match(/\d+/g);
             let ans = nums[0] * nums[1];
             result = `<span class="step">STEP 1:</span> Area = Length x Breadth\n<span class="step">STEP 2:</span> ${nums[0]} x ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The area is ${ans}`;
         }
-        // 4. LCM
         else if(p.includes('lcm')) {
             const nums = p.match(/\d+/g);
             let ans = lcm(nums[0], nums[1]);
             result = `<span class="step">STEP 1:</span> Find LCM of ${nums[0]} and ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The LCM of ${nums[0]} and ${nums[1]} is ${ans}`;
         }
-        // 5. PERCENT
         else if(p.includes('percent')) {
             const nums = p.match(/\d+\.?\d*/g);
             let ans = nums[0]*nums[1]/100;
             result = `<span class="step">STEP 1:</span> ${nums[1]}% of ${nums[0]} = ${nums[0]} x ${nums[1]}/100\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        // 6. ALGEBRA
         else if(p.includes('x') && p.includes('=')) {
-            let a = parseFloat(p.match(/(\d+)x/)[1]); let b = parseFloat(p.match(/x \+ (\d+)/)[1]); let c = parseFloat(p.match(/= (\d+)/)[1]);
-            let x = (c-b)/a;
+            let parts = p.match(/(\d+)x \+ (\d+) = (\d+)/);
+            let a=parts[1], b=parts[2], c=parts[3]; let x = (c-b)/a;
             result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n<span class="step">STEP 2:</span> x = ${(c-b)}/${a}\n<span class="ans">✅ ANSWER: x = ${x}</span>`;
             lastAnswerText = `The answer is x equals ${x}`;
         }
-        // 7. BASIC MATH
         else if(p.match(/[\d\+\-\*\/\.\(\)]/)) {
             let ans = eval(p);
             result = `<span class="step">STEP 1:</span> Calculate: ${p}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        else { result = "Try: 1/2+1/4, HCF 12 18, Area 5 10"; }
+        else { result = "Try: LCM of eight and 12"; }
 
-    } catch(e) { result = "Check your typing. Example: 1/2+1/4"; }
+    } catch(e) { result = "Check your typing. Example: LCM of 8 and 12"; }
 
     document.getElementById('answer').innerHTML = result;
 }
