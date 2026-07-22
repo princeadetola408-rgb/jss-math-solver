@@ -3,100 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS MATH SOLVER</title>
+<title>JSS GENIUS V4.0 - STEP BY STEP</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-body { background: #0d1117; color: #c9d1d9; padding: 16px; min-height: 100vh; }
-.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.logo { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-.header h1 { font-size: 20px; font-weight: 700; color: white; }
-.header p { font-size: 12px; color: #8b949e; }
-.tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 24px; }
-.tab { background: #161b22; border: 1px solid #30363d; padding: 8px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; color: #8b949e; }
-.tab.active { background: #1f6feb; border-color: #1f6feb; color: white; }
-.section-title { color: #8b949e; font-size: 11px; font-weight: 600; margin: 20px 0 10px 0; text-transform: uppercase; }
-.example { background: #161b22; border: 1px solid #30363d; padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
-.example::before { content: '>'; color: #1f6feb; margin-right: 8px; }
-.input-box { width: 100%; background: #161b22; border: 1px solid #30363d; color: white; padding: 16px; border-radius: 10px; font-size: 15px; min-height: 120px; resize: none; }
-.btn-solve { width: 100%; background: #22c55e; color: white; border: none; padding: 16px; border-radius: 10px; font-size: 16px; font-weight: 700; margin: 16px 0; cursor: pointer; }
-.btn-group { display: flex; gap: 10px; }
-.btn { flex: 1; padding: 14px; border-radius: 10px; border: 1px solid #30363d; font-weight: 600; cursor: pointer; background: #161b22; }
-.btn-clear { color: #f87171; border-color: #f87171; }
-.btn-talk { color: #a78bfa; border-color: #a78bfa; }
-.result { background: #161b22; border: 1px solid #22c55e; padding: 16px; border-radius: 10px; margin-top: 15px; display: none; }
-.result.show { display: block; }
-.result b { color: #22c55e; }
+    body { background: #0a0a0a; color: #fff; font-family: Arial; padding: 15px; }
+    h1 { color: #00ff88; text-align: center; }
+ .box { background: #1a1a1a; padding: 20px; border-radius: 15px; max-width: 650px; margin: auto; }
+    input { width: 95%; padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #00ff88; background: #000; color: #fff; }
+    button { width: 100%; padding: 15px; font-size: 18px; border: none; border-radius: 10px; margin-top: 10px; background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; font-weight: bold; cursor: pointer; }
+    #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 1.8; }
+ .step { color: #00ccff; }
+ .ans { color: #ff8800; font-weight: bold; font-size: 18px; }
 </style>
 </head>
 <body>
-<div class="header">
-<div class="logo">🧮</div>
-<div>
-<h1>JSS MATH SOLVER</h1>
-<p>Your Smart Math Companion</p>
-</div>
-</div>
-
-<div class="tabs">
-<div class="tab active">All</div>
-<div class="tab">Arithmetic</div>
-<div class="tab">Fractions</div>
-<div class="tab">LCM/HC</div>
-</div>
-
-<div class="section-title">EXAMPLE PROBLEMS</div>
-<div class="example" onclick="fill('24 + 18 * 3')">24 + 18 * 3</div>
-<div class="example" onclick="fill('simplify 18/24')">simplify 18/24</div>
-<div class="example" onclick="fill('LCM of 12 and 18')">LCM of 12 and 18</div>
-
-<div class="section-title">ENTER YOUR PROBLEM</div>
-<textarea id="question" class="input-box" placeholder="Type your math problem here..."></textarea>
-
-<button class="btn-solve" onclick="solve()">✨ SOLVE</button>
-
-<div class="btn-group">
-<button class="btn btn-clear" onclick="clearAll()">✕ CLEAR</button>
-<button class="btn btn-talk" onclick="talk()">🔊 TALK</button>
-</div>
-
-<div id="resultBox" class="result"></div>
+    <h1>📱 JSS GENIUS V4.0</h1>
+    <div class="box">
+        <input type="text" id="problemInput" placeholder="Type ANY JSS question... e.g. LCM of 12 and 18">
+        <button onclick="solveMath()">✨ SOLVE WITH FULL STEPS</button>
+        <div id="answer"></div>
+    </div>
 
 <script>
-let lastAnswer = "";
-function fill(txt){ document.getElementById("question").value = txt; }
+function gcd(a,b){ return b==0?a:gcd(b,a%b) }
+function lcm(a,b){ return (a*b)/gcd(a,b) }
 
-function wordsToMath(text) {
-text = text.toLowerCase();
-text = text.replace(/√/g, "sqrt").replace(/simplify/g, "").replace(/of/g, "");
-text = text.replace(/plus/g, "+").replace(/minus/g, "-").replace(/times/g, "*").replace(/divided by/g, "/");
-return text;
+function solveMath() {
+    const p = document.getElementById('problemInput').value.toLowerCase();
+    const nums = p.match(/-?\d+\.?\d*/g) || [];
+    let result = "";
+    
+    try {
+        // 1. PERCENTAGE
+        if(p.includes('percent')) {
+            result = `<span class="step">STEP 1:</span> Write % as fraction = ${nums[1]}/100\n`;
+            result += `<span class="step">STEP 2:</span> Multiply = ${nums[0]} x ${nums[1]}/100\n`;
+            result += `<span class="step">STEP 3:</span> Calculate = ${nums[0]*nums[1]/100}\n\n`;
+            result += `<span class="ans">✅ ANSWER: ${nums[1]}% of ${nums[0]} = ${nums[0]*nums[1]/100}</span>`;
+        }
+        
+        // 2. LCM
+        else if(p.includes('lcm')) {
+            result = `<span class="step">STEP 1:</span> List multiples of ${nums[0]}: ${nums[0]}, ${nums[0]*2}, ${nums[0]*3}, ${nums[0]*4}...\n`;
+            result += `<span class="step">STEP 2:</span> List multiples of ${nums[1]}: ${nums[1]}, ${nums[1]*2}, ${nums[1]*3}...\n`;
+            result += `<span class="step">STEP 3:</span> Find the smallest number in both lists\n`;
+            result += `<span class="ans">✅ ANSWER: LCM = ${lcm(nums[0], nums[1])}</span>`;
+        }
+        
+        // 3. FRACTION SIMPLIFY
+        else if(p.includes('simplify') && p.includes('/')) {
+            let g = gcd(nums[0],nums[1]);
+            result = `<span class="step">STEP 1:</span> Find HCF of ${nums[0]} and ${nums[1]} = ${g}\n`;
+            result += `<span class="step">STEP 2:</span> Divide top and bottom by ${g}\n`;
+            result += `<span class="step">STEP 3:</span> ${nums[0]}/${g} / ${nums[1]}/${g}\n\n`;
+            result += `<span class="ans">✅ ANSWER: ${nums[0]/g}/${nums[1]/g}</span>`;
+        }
+        
+        // 4. ALGEBRA
+        else if(p.includes('x') && p.includes('=')) {
+            let a = parseFloat(p.match(/(\d+)x/)[1]); 
+            let b = parseFloat(p.match(/x \+ (\d+)/)[1]); 
+            let c = parseFloat(p.match(/= (\d+)/)[1]);
+            let x = (c-b)/a;
+            result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n`;
+            result += `<span class="step">STEP 2:</span> Move ${b} to other side: ${a}x = ${c} - ${b}\n`;
+            result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
+            result += `<span class="step">STEP 4:</span> Divide by ${a}: x = ${(c-b)}/${a}\n\n`;
+            result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
+        }
+        
+        // 5. TRIGONOMETRY
+        else if(p.includes('sin') || p.includes('cos') || p.includes('tan')) {
+            let func = p.includes('sin')? 'sin' : p.includes('cos')? 'cos' : 'tan';
+            let val = func=='sin'? Math.sin(nums[0]*Math.PI/180) : func=='cos'? Math.cos(nums[0]*Math.PI/180) : Math.tan(nums[0]*Math.PI/180);
+            result = `<span class="step">STEP 1:</span> Use calculator for ${func}(${nums[0]}°)\n`;
+            result += `<span class="step">STEP 2:</span> Make sure calculator is in DEGREE mode\n\n`;
+            result += `<span class="ans">✅ ANSWER: ${func}(${nums[0]}) = ${val.toFixed(4)}</span>`;
+        }
+        
+        // 6. SIMPLE INTEREST
+        else if(p.includes('interest')) {
+            let P=nums[0], R=nums[1], T=nums[2];
+            let SI = (P*R*T)/100;
+            result = `<span class="step">STEP 1:</span> Formula: SI = P x R x T / 100\n`;
+            result += `<span class="step">STEP 2:</span> Put values: ${P} x ${R} x ${T} / 100\n`;
+            result += `<span class="step">STEP 3:</span> Calculate = ${SI}\n\n`;
+            result += `<span class="ans">✅ ANSWER: Simple Interest = ${SI}</span>`;
+        }
+        
+        else {
+            result = "I can show steps for: %, LCM, Fractions, Algebra, Trig, Interest\n\nTry: 10 percent of 500";
+        }
+        
+    } catch(e) { result = "Check your typing. Example: LCM of 12 and 18"; }
+    
+    document.getElementById('answer').innerHTML = result;
 }
-
-function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b==0?a:gcd(b,a%b); }
-function lcm(a,b){ return (a*b)/gcd(a,b); }
-
-function solve() {
-let raw = document.getElementById("question").value;
-let q = wordsToMath(raw);
-let out = document.getElementById("resultBox"); out.classList.add("show");
-
-try {
-let n = q.match(/[0-9.]+/g);
-if(!n) throw "No numbers";
-n = n.map(Number);
-
-if(q.includes("lcm") && n.length>=2){ lastAnswer=lcm(n[0],n[1]); out.innerHTML=`<b>LCM:</b> <b>${lastAnswer}</b>`; return; }
-if(q.includes("hcf") && n.length>=2){ lastAnswer=gcd(n[0],n[1]); out.innerHTML=`<b>HCF:</b> <b>${lastAnswer}</b>`; return; }
-if(q.includes("sqrt") && n.length>=1){ lastAnswer=Math.sqrt(n[0]); out.innerHTML=`<b>√${n[0]} = ${lastAnswer}</b>`; return; }
-if(q.includes("%") && q.includes("of") && n.length>=2){ lastAnswer=(n[0]/100)*n[1]; out.innerHTML=`<b>${n[0]}% of ${n[1]} = ${lastAnswer}</b>`; return; }
-
-lastAnswer=eval(q); out.innerHTML=`<b>Answer:</b><br>${q} = <b>${lastAnswer}</b>`;
-
-} catch(e){ out.innerHTML=`<span style="color:#f87171">Error. Try: sqrt 64, 1/2+1/4, lcm 4 6</span>`; }
-}
-
-function talk(){ if(lastAnswer=="")alert("Solve something first"); else speechSynthesis.speak(new SpeechSynthesisUtterance(lastAnswer.toString())); }
-function clearAll(){ document.getElementById("question").value=""; document.getElementById("resultBox").classList.remove("show"); }
 </script>
 </body>
 </html>
