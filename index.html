@@ -3,27 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS GENIUS V4.0 - STEP BY STEP</title>
+<title>JSS GENIUS V7.0 - VOICE CONTROL</title>
 <style>
-    body { background: #0a0a0a; color: #fff; font-family: Arial; padding: 15px; }
-    h1 { color: #00ff88; text-align: center; }
- .box { background: #1a1a1a; padding: 20px; border-radius: 15px; max-width: 650px; margin: auto; }
-    input { width: 95%; padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #00ff88; background: #000; color: #fff; }
-    button { width: 100%; padding: 15px; font-size: 18px; border: none; border-radius: 10px; margin-top: 10px; background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; font-weight: bold; cursor: pointer; }
-    #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 1.8; }
- .step { color: #00ccff; }
- .ans { color: #ff8800; font-weight: bold; font-size: 18px; }
+    body { background: #0a0a0a; color: #fff; font-family: Arial; padding: 15px; text-align: center; }
+    h1 { color: #00ff88; }
+.box { background: #1a1a1a; padding: 20px; border-radius: 15px; max-width: 650px; margin: auto; }
+    input { width: 95%; padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #00ff88; background: #000; color: #fff; margin-bottom: 10px; }
+   .btn-row { display: flex; gap: 10px; }
+    button { flex: 1; padding: 15px; font-size: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    #listenBtn { background: #ff8800; color: #000; } /* ORANGE = LISTEN */
+    #solveBtn { background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; } /* GREEN = SOLVE */
+    #speakBtn { background: #00ccff; color: #000; } /* BLUE = SPEAK */
+    #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 1.8; min-height: 100px; }
+.step { color: #00ccff; }
+.ans { color: #ff8800; font-weight: bold; font-size: 18px; }
+.listening { animation: pulse 1s infinite; }
+ @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,136,0,0.7); } 100% { box-shadow: 0 0 0 15px rgba(255,136,0,0); }
 </style>
 </head>
 <body>
-    <h1>📱 JSS GENIUS V4.0</h1>
+    <h1>📱 JSS GENIUS V7.0</h1>
+    <div style="color:#aaa">AI TEACHER - Separate Voice Controls</div>
+    
     <div class="box">
-        <input type="text" id="problemInput" placeholder="Type ANY JSS question... e.g. LCM of 12 and 18">
-        <button onclick="solveMath()">✨ SOLVE WITH FULL STEPS</button>
-        <div id="answer"></div>
+        <input type="text" id="problemInput" placeholder="Tap LISTEN or type your question...">
+        
+        <div class="btn-row">
+            <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
+            <button id="solveBtn" onclick="solveMath()">✨ SOLVE</button>
+            <button id="speakBtn" onclick="speakAnswer()">🔊 SPEAK</button>
+        </div>
+        
+        <div id="answer">Answer and steps will appear here...</div>
     </div>
 
 <script>
+let lastAnswerText = ""; // This stores what to speak
+
+// 1. LISTENING BUTTON
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'en-US';
+
+function startVoice() {
+    document.getElementById('listenBtn').classList.add('listening');
+    document.getElementById('listenBtn').innerText = "🎤 LISTENING...";
+    recognition.start();
+}
+recognition.onresult = (e) => {
+    document.getElementById('problemInput').value = e.results[0][0].transcript;
+    document.getElementById('listenBtn').classList.remove('listening');
+    document.getElementById('listenBtn').innerText = "🎤 LISTEN";
+}
+
+// 2. SPEAKING BUTTON
+function speakAnswer() {
+    if(lastAnswerText === "") {
+        alert("Solve a problem first!");
+        return;
+    }
+    const speech = new SpeechSynthesisUtterance(lastAnswerText);
+    speech.lang = 'en-US';
+    speech.rate = 0.9;
+    window.speechSynthesis.speak(speech);
+}
+
+// 3. SOLVE BUTTON
 function gcd(a,b){ return b==0?a:gcd(b,a%b) }
 function lcm(a,b){ return (a*b)/gcd(a,b) }
 
@@ -31,70 +76,28 @@ function solveMath() {
     const p = document.getElementById('problemInput').value.toLowerCase();
     const nums = p.match(/-?\d+\.?\d*/g) || [];
     let result = "";
+    lastAnswerText = "";
     
     try {
-        // 1. PERCENTAGE
         if(p.includes('percent')) {
-            result = `<span class="step">STEP 1:</span> Write % as fraction = ${nums[1]}/100\n`;
-            result += `<span class="step">STEP 2:</span> Multiply = ${nums[0]} x ${nums[1]}/100\n`;
-            result += `<span class="step">STEP 3:</span> Calculate = ${nums[0]*nums[1]/100}\n\n`;
-            result += `<span class="ans">✅ ANSWER: ${nums[1]}% of ${nums[0]} = ${nums[0]*nums[1]/100}</span>`;
+            let ans = nums[0]*nums[1]/100;
+            result = `<span class="step">STEP 1:</span> ${nums[1]}% of ${nums[0]} = ${nums[0]} x ${nums[1]}/100\n<span class="step">STEP 2:</span> = ${ans}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `Step 1. ${nums[1]} percent of ${nums[0]}. Step 2. The answer is ${ans}`;
         }
-        
-        // 2. LCM
         else if(p.includes('lcm')) {
-            result = `<span class="step">STEP 1:</span> List multiples of ${nums[0]}: ${nums[0]}, ${nums[0]*2}, ${nums[0]*3}, ${nums[0]*4}...\n`;
-            result += `<span class="step">STEP 2:</span> List multiples of ${nums[1]}: ${nums[1]}, ${nums[1]*2}, ${nums[1]*3}...\n`;
-            result += `<span class="step">STEP 3:</span> Find the smallest number in both lists\n`;
-            result += `<span class="ans">✅ ANSWER: LCM = ${lcm(nums[0], nums[1])}</span>`;
+            let ans = lcm(nums[0], nums[1]);
+            result = `<span class="step">STEP 1:</span> Find LCM of ${nums[0]} and ${nums[1]}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The LCM of ${nums[0]} and ${nums[1]} is ${ans}`;
         }
-        
-        // 3. FRACTION SIMPLIFY
-        else if(p.includes('simplify') && p.includes('/')) {
-            let g = gcd(nums[0],nums[1]);
-            result = `<span class="step">STEP 1:</span> Find HCF of ${nums[0]} and ${nums[1]} = ${g}\n`;
-            result += `<span class="step">STEP 2:</span> Divide top and bottom by ${g}\n`;
-            result += `<span class="step">STEP 3:</span> ${nums[0]}/${g} / ${nums[1]}/${g}\n\n`;
-            result += `<span class="ans">✅ ANSWER: ${nums[0]/g}/${nums[1]/g}</span>`;
-        }
-        
-        // 4. ALGEBRA
         else if(p.includes('x') && p.includes('=')) {
-            let a = parseFloat(p.match(/(\d+)x/)[1]); 
-            let b = parseFloat(p.match(/x \+ (\d+)/)[1]); 
-            let c = parseFloat(p.match(/= (\d+)/)[1]);
+            let a = parseFloat(p.match(/(\d+)x/)[1]); let b = parseFloat(p.match(/x \+ (\d+)/)[1]); let c = parseFloat(p.match(/= (\d+)/)[1]);
             let x = (c-b)/a;
-            result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n`;
-            result += `<span class="step">STEP 2:</span> Move ${b} to other side: ${a}x = ${c} - ${b}\n`;
-            result += `<span class="step">STEP 3:</span> ${a}x = ${c-b}\n`;
-            result += `<span class="step">STEP 4:</span> Divide by ${a}: x = ${(c-b)}/${a}\n\n`;
-            result += `<span class="ans">✅ ANSWER: x = ${x}</span>`;
+            result = `<span class="step">STEP 1:</span> ${a}x + ${b} = ${c}\n<span class="step">STEP 2:</span> x = ${(c-b)}/${a}\n<span class="ans">✅ ANSWER: x = ${x}</span>`;
+            lastAnswerText = `Solving ${a}x plus ${b} equals ${c}. The answer is x equals ${x}`;
         }
+        else { result = "Try: 10 percent of 500, LCM of 12 and 18"; lastAnswerText = "Please try an example"; }
         
-        // 5. TRIGONOMETRY
-        else if(p.includes('sin') || p.includes('cos') || p.includes('tan')) {
-            let func = p.includes('sin')? 'sin' : p.includes('cos')? 'cos' : 'tan';
-            let val = func=='sin'? Math.sin(nums[0]*Math.PI/180) : func=='cos'? Math.cos(nums[0]*Math.PI/180) : Math.tan(nums[0]*Math.PI/180);
-            result = `<span class="step">STEP 1:</span> Use calculator for ${func}(${nums[0]}°)\n`;
-            result += `<span class="step">STEP 2:</span> Make sure calculator is in DEGREE mode\n\n`;
-            result += `<span class="ans">✅ ANSWER: ${func}(${nums[0]}) = ${val.toFixed(4)}</span>`;
-        }
-        
-        // 6. SIMPLE INTEREST
-        else if(p.includes('interest')) {
-            let P=nums[0], R=nums[1], T=nums[2];
-            let SI = (P*R*T)/100;
-            result = `<span class="step">STEP 1:</span> Formula: SI = P x R x T / 100\n`;
-            result += `<span class="step">STEP 2:</span> Put values: ${P} x ${R} x ${T} / 100\n`;
-            result += `<span class="step">STEP 3:</span> Calculate = ${SI}\n\n`;
-            result += `<span class="ans">✅ ANSWER: Simple Interest = ${SI}</span>`;
-        }
-        
-        else {
-            result = "I can show steps for: %, LCM, Fractions, Algebra, Trig, Interest\n\nTry: 10 percent of 500";
-        }
-        
-    } catch(e) { result = "Check your typing. Example: LCM of 12 and 18"; }
+    } catch(e) { result = "Check your typing"; lastAnswerText = "Check your typing"; }
     
     document.getElementById('answer').innerHTML = result;
 }
