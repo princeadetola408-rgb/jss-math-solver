@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS MATH SOLVER PRO</title>
+<title>JSS MATH SOLVER </title>
 <style>
     body { background: linear-gradient(135deg, #0a0a0a, #001a33); color: #fff; font-family: Arial; padding: 15px; text-align: center; }
     h1 { color: #00ff88; font-size: 30px; text-shadow: 0 0 10px #00ff88; }
@@ -29,12 +29,12 @@
 </style>
 </head>
 <body>
-    <h1>📱 JSS MATH SOLVER PRO V8.5</h1>
-    <div class="subtitle">NOW WITH WORD PROBLEMS!</div>
+    <h1>📱 JSS MATH SOLVER </h1>
+    <div class="subtitle">FIXED % PROBLEMS!</div>
 
     <div class="box">
         <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Ask in English: What is 3 times 3">
+        <input type="text" id="problemInput" placeholder="Enter your math question ...">
 
         <div class="btn-row">
             <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
@@ -48,9 +48,9 @@
             <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
         </div>
 
-        <div id="answer">Ask me ANY math question in English!</div>
+        <div id="answer">Ask me ANY math question!</div>
         <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">V8.5: 30 TOPICS + 10 SHAPES + WORD PROBLEMS</div>
+        <div class="topics">V8.6: NOW SOLVES % PROBLEMS!</div>
     </div>
 
 <script>
@@ -59,7 +59,7 @@ let history = JSON.parse(localStorage.getItem('mathHistory')) || [];
 let timerInterval, seconds = 0, timerOn = false;
 
 function wordsToNumbers(text) {
-    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,"twenty":20};
+    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"twenty":20};
     let newText = text.toLowerCase();
     for(let word in words) { newText = newText.replace(new RegExp('\\b'+word+'\\b', "gi"), words[word]); }
     return newText;
@@ -87,7 +87,7 @@ function speakAnswer() {
 
 function clearAll() {
     document.getElementById('problemInput').value = "";
-    document.getElementById('answer').innerHTML = "Ask me ANY math question in English!";
+    document.getElementById('answer').innerHTML = "Ask me ANY math question!";
     lastAnswerText = "";
     window.speechSynthesis.cancel();
 }
@@ -129,79 +129,49 @@ function downloadPDF() {
 }
 
 function gcd(a,b){ return b==0?a:gcd(b,a%b) }
-function lcm(a,b){ return (a*b)/gcd(a,b) }
-
-function factorize(n) {
-    let factors = []; let steps = []; let temp = n;
-    for(let i=2; i<=n; i++) {
-        while(temp % i === 0) {
-            factors.push(i);
-            steps.push(`${temp} ÷ ${i} = ${temp/i}`);
-            temp = temp / i;
-        }
-    }
-    return {factors, steps};
-}
 
 function solveMath() {
     let originalQ = document.getElementById('problemInput').value;
     let p = originalQ.toLowerCase();
     p = wordsToNumbers(p);
-    let p_calc = p.replace(/x/g, '*').replace(/times/g, '*').replace(/divided by/g, '/').replace(/plus/g, '+').replace(/minus/g, '-').replace(/×/g, '*').replace(/\s+/g, '');
     const nums = p.match(/-?\d+/g);
 
     let result = "";
     lastAnswerText = "";
 
     try {
-        // WORD PROBLEMS FIRST
-        if(p.includes('area') && p.includes('circle') && nums) {
+        // FIX 1: PERCENTAGE WORD PROBLEMS
+        if(p.includes('%') && p.includes('of') && nums && nums.length >= 2) {
+            let percent = nums[0];
+            let number = nums[1];
+            let ans = (percent/100) * number;
+            result = `<span class="step">STEP 1:</span> ${percent}% means ${percent}/100 = ${percent/100}\n<span class="step">STEP 2:</span> ${percent/100} × ${number} = ${ans}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The answer is ${ans}`;
+        }
+        // FIX 2: TIMES / MULTIPLY WORD PROBLEMS
+        else if((p.includes('times') || p.includes('*')) && nums && nums.length >= 2) {
+            let ans = nums[0] * nums[1];
+            result = `<span class="ans">✅ ANSWER: ${ans}</span>`;
+            lastAnswerText = `The answer is ${ans}`;
+        }
+        // FIX 3: AREA CIRCLE WORD PROBLEM
+        else if(p.includes('area') && p.includes('circle') && nums) {
             let r = parseInt(nums[0]); let area = 3.142 * r * r;
-            result = `<span class="step">STEP 1:</span> Area of circle = πr²\n<span class="step">STEP 2:</span> = 3.142 × ${r} × ${r}\n<span class="ans">✅ ANSWER: ${area.toFixed(2)} sq units</span>`;
-            lastAnswerText = `The area of the circle is ${area.toFixed(2)} square units`;
-        }
-        else if(p.includes('mean') && p.includes('average') && nums) {
-            let numbers = nums.map(Number);
-            let sum = numbers.reduce((a,b)=>a+b,0); let mean = sum/numbers.length;
-            result = `<span class="step">STEP 1:</span> Add all numbers: ${numbers.join(' + ')} = ${sum}\n<span class="step">STEP 2:</span> Divide by ${numbers.length}\n<span class="ans">✅ ANSWER: Mean = ${mean}</span>`;
-            lastAnswerText = `The mean is ${mean}`;
-        }
-        else if(p.includes('hcf') && nums) {
-            let numbers = nums.map(Number);
-            let hcf = numbers.reduce((a,b)=>gcd(a,b));
-            result = `<span class="ans">✅ ANSWER: The HCF is ${hcf}</span>`;
-            lastAnswerText = `The HCF is ${hcf}`;
-        }
-        else if(p.includes('volume') && p.includes('sphere') && nums) {
-            let vol = (4/3) * 3.142 * nums[0] * nums[0] * nums[0];
-            result = `<span class="ans">✅ ANSWER: ${vol.toFixed(2)} cubic units</span>`;
-            lastAnswerText = `The volume is ${vol.toFixed(2)} cubic units`;
+            result = `<span class="step">STEP 1:</span> Area = πr²\n<span class="ans">✅ ANSWER: ${area.toFixed(2)} sq units</span>`;
+            lastAnswerText = `The area is ${area.toFixed(2)} square units`;
         }
         // SMART CALCULATOR
-        else if(p_calc.match(/^[\d\+\-\*\/\.\(\)]+$/)) {
+        else if(p.match(/^[\d\+\-\*\/\.\(\)\%]+$/)) {
+            let p_calc = p.replace('%', '/100*');
             let ans = eval(p_calc);
             result = `<span class="ans">✅ ANSWER: ${ans}</span>`;
             lastAnswerText = `The answer is ${ans}`;
         }
-        // ALL OTHER 30 TOPICS STILL HERE
-        else if(p.includes('matrix')) {
-            const n = nums.map(Number);
-            let det = n[0]*n[3] - n[1]*n[2];
-            result = `<span class="ans">✅ ANSWER: Determinant = ${det}</span>`;
-        }
-        else if(p.includes('derivative')) {
-            result = `<span class="ans">✅ ANSWER: 2x</span>`;
-        }
-        else if(p.includes('mean')) {
-            let numbers = nums.map(Number);
-            let mean = numbers.reduce((a,b)=>a+b,0)/numbers.length;
-            result = `<span class="ans">✅ ANSWER: Mean = ${mean}</span>`;
-        }
         else {
-            result = "Try: What is the area of a circle with radius 7?";
+            result = "Try: 20% of 720 or area of circle radius 7";
         }
 
-    } catch(e) { result = "Sorry, try: What is 3 times 3?"; }
+    } catch(e) { result = "Error. Try: 20% of 720"; }
 
     document.getElementById('answer').innerHTML = result;
     saveHistory(originalQ, result.replace(/<[^>]*>/g, '').split('✅ ANSWER:')[1]);
