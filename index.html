@@ -7,174 +7,74 @@
 <style>
     body { background: linear-gradient(135deg, #0a0a0a, #001a33); color: #fff; font-family: Arial; padding: 15px; text-align: center; }
     h1 { color: #00ff88; font-size: 30px; text-shadow: 0 0 10px #00ff88; }
-.subtitle { color:#aaa; margin-bottom: 15px; }
 .box { background: #1a1a1a; padding: 20px; border-radius: 20px; max-width: 700px; margin: auto; box-shadow: 0 0 20px #00ff88; }
     input { width: 95%; padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #00ff88; background: #000; color: #fff; margin-bottom: 10px; }
 .btn-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-    button { flex: 1; min-width: 120px; padding: 15px; font-size: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    button:hover { transform: scale(1.05); }
-    #listenBtn { background: #ff8800; color: #000; }
+    button { flex: 1; min-width: 120px; padding: 15px; font-size: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     #solveBtn { background: linear-gradient(90deg, #00ff88, #00ccff); color: #000; }
-    #speakBtn { background: #00ccff; color: #000; }
-    #pdfBtn { background: #aa00ff; color: #fff; }
-    #clearBtn { background: #ff0044; color: #fff; }
-    #historyBtn { background: #ffaa00; color: #000; }
-    #timerBtn { background: #00ff88; color: #000; }
     #answer { font-size: 16px; color: #00ff88; margin-top: 20px; background: #0f0f0f; padding: 15px; border-radius: 10px; text-align: left; white-space: pre-line; line-height: 2; min-height: 150px; }
 .step { color: #00ccff; font-weight: bold; }
 .ans { color: #ff8800; font-weight: bold; font-size: 20px; }
-.topics { font-size: 12px; color: #888; margin-top: 10px; }
-#timer { color: #ff8800; font-size: 18px; font-weight: bold; }
-.history { background: #111; padding: 10px; border-radius: 10px; margin-top: 10px; text-align: left; font-size: 13px; max-height: 150px; overflow-y: auto; }
 </style>
 </head>
 <body>
     <h1>📱 JSS MATH SOLVER </h1>
-    <div class="subtitle">FIXED % PROBLEMS!</div>
-
     <div class="box">
-        <div id="timer">⏰ Exam Mode: OFF</div>
-        <input type="text" id="problemInput" placeholder="Enter your math question ...">
-
+        <div>⏰ Exam Mode: OFF</div>
+        <input type="text" id="problemInput" placeholder="Enter your math question....">
         <div class="btn-row">
-            <button id="listenBtn" onclick="startVoice()">🎤 LISTEN</button>
+            <button onclick="startVoice()">🎤 LISTEN</button>
             <button id="solveBtn" onclick="solveMath()">✨ SOLVE</button>
-            <button id="speakBtn" onclick="speakAnswer()">🔊 SPEAK</button>
-            <button id="timerBtn" onclick="toggleTimer()">⏰ TIMER</button>
         </div>
-        <div class="btn-row">
-            <button id="pdfBtn" onclick="downloadPDF()">📄 SAVE PDF</button>
-            <button id="historyBtn" onclick="showHistory()">📚 HISTORY</button>
-            <button id="clearBtn" onclick="clearAll()">🗑️ CLEAR</button>
-        </div>
-
         <div id="answer">Ask me ANY math question!</div>
-        <div id="historyBox" class="history" style="display:none;"></div>
-        <div class="topics">V8.6: NOW SOLVES % PROBLEMS!</div>
     </div>
 
 <script>
-let lastAnswerText = "";
-let history = JSON.parse(localStorage.getItem('mathHistory')) || [];
-let timerInterval, seconds = 0, timerOn = false;
-
-function wordsToNumbers(text) {
-    const words = {"zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"twenty":20};
-    let newText = text.toLowerCase();
-    for(let word in words) { newText = newText.replace(new RegExp('\\b'+word+'\\b', "gi"), words[word]); }
-    return newText;
-}
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.lang = 'en-US';
-function startVoice() {
-    recognition.start();
-    document.getElementById('listenBtn').innerText = "🎤 LISTENING...";
-}
-recognition.onresult = (e) => {
-    document.getElementById('problemInput').value = e.results[0][0].transcript;
-    document.getElementById('listenBtn').innerText = "🎤 LISTEN";
-}
-recognition.onerror = () => { document.getElementById('listenBtn').innerText = "🎤 LISTEN"; }
-
-function speakAnswer() {
-    if(lastAnswerText === "") { alert("Solve first!"); return; }
-    const speech = new SpeechSynthesisUtterance(lastAnswerText);
-    speech.rate = 0.9;
-    window.speechSynthesis.speak(speech);
-}
-
-function clearAll() {
-    document.getElementById('problemInput').value = "";
-    document.getElementById('answer').innerHTML = "Ask me ANY math question!";
-    lastAnswerText = "";
-    window.speechSynthesis.cancel();
-}
-
-function toggleTimer() {
-    timerOn =!timerOn;
-    if(timerOn) {
-        seconds = 0;
-        timerInterval = setInterval(()=>{ seconds++; document.getElementById('timer').innerText = `⏰ Time: ${seconds}s`; },1000);
-        document.getElementById('timerBtn').innerText = "⏰ STOP";
-    } else {
-        clearInterval(timerInterval);
-        document.getElementById('timerBtn').innerText = "⏰ TIMER";
-        document.getElementById('timer').innerText = `⏰ Exam Mode: OFF`;
-    }
-}
-
-function saveHistory(q,a) {
-    history.unshift({q:q, a:a, time:new Date().toLocaleTimeString()});
-    if(history.length>10) history.pop();
-    localStorage.setItem('mathHistory', JSON.stringify(history));
-}
-
-function showHistory() {
-    const box = document.getElementById('historyBox');
-    if(box.style.display==="none") {
-        box.style.display="block";
-        box.innerHTML = "<b>📚 LAST 10 QUESTIONS:</b><br>" + history.map(h=>`<b>${h.time}</b> Q: ${h.q}<br>A: ${h.a}<hr>`).join('');
-    } else { box.style.display="none"; }
-}
-
-function downloadPDF() {
-    let text = "JSS MATH SOLVER WORKING\n" + document.getElementById('answer').innerText;
-    let blob = new Blob([text], {type: 'text/plain'});
-    let link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'JSS_Math_Working.txt';
-    link.click();
-}
-
-function gcd(a,b){ return b==0?a:gcd(b,a%b) }
-
 function solveMath() {
     let originalQ = document.getElementById('problemInput').value;
     let p = originalQ.toLowerCase();
-    p = wordsToNumbers(p);
-    const nums = p.match(/-?\d+/g);
+    
+    // FIX: CONVERT ALL SYMBOLS TO CODE SYMBOLS
+    let p_calc = p.replace(/×/g, '*').replace(/÷/g, '/').replace(/x/g, '*').replace(/percent/g, '%').replace(/\s+/g, '');
+    const nums = p_calc.match(/-?\d+/g);
 
     let result = "";
-    lastAnswerText = "";
 
     try {
-        // FIX 1: PERCENTAGE WORD PROBLEMS
-        if(p.includes('%') && p.includes('of') && nums && nums.length >= 2) {
-            let percent = nums[0];
-            let number = nums[1];
+        // 1. PERCENTAGE: 20% of 720
+        if(p_calc.includes('%') && p_calc.includes('of')) {
+            let percent = parseFloat(nums[0]);
+            let number = parseFloat(nums[1]);
             let ans = (percent/100) * number;
-            result = `<span class="step">STEP 1:</span> ${percent}% means ${percent}/100 = ${percent/100}\n<span class="step">STEP 2:</span> ${percent/100} × ${number} = ${ans}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `The answer is ${ans}`;
+            result = `<span class="step">STEP 1:</span> ${percent}% = ${percent}/100\n<span class="step">STEP 2:</span> ${percent/100} × ${number}\n<span class="ans">✅ ANSWER: ${ans}</span>`;
         }
-        // FIX 2: TIMES / MULTIPLY WORD PROBLEMS
-        else if((p.includes('times') || p.includes('*')) && nums && nums.length >= 2) {
-            let ans = nums[0] * nums[1];
-            result = `<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `The answer is ${ans}`;
-        }
-        // FIX 3: AREA CIRCLE WORD PROBLEM
-        else if(p.includes('area') && p.includes('circle') && nums) {
-            let r = parseInt(nums[0]); let area = 3.142 * r * r;
-            result = `<span class="step">STEP 1:</span> Area = πr²\n<span class="ans">✅ ANSWER: ${area.toFixed(2)} sq units</span>`;
-            lastAnswerText = `The area is ${area.toFixed(2)} square units`;
-        }
-        // SMART CALCULATOR
-        else if(p.match(/^[\d\+\-\*\/\.\(\)\%]+$/)) {
-            let p_calc = p.replace('%', '/100*');
+        // 2. SMART CALCULATOR: 3×3 or 3*3
+        else if(p_calc.match(/^[\d\+\-\*\/\.\(\)]+$/)) {
             let ans = eval(p_calc);
             result = `<span class="ans">✅ ANSWER: ${ans}</span>`;
-            lastAnswerText = `The answer is ${ans}`;
+        }
+        // 3. WORD PROBLEM AREA
+        else if(p.includes('area') && p.includes('circle') && nums) {
+            let r = parseFloat(nums[0]); let area = 3.142 * r * r;
+            result = `<span class="ans">✅ ANSWER: ${area.toFixed(2)} sq units</span>`;
         }
         else {
-            result = "Try: 20% of 720 or area of circle radius 7";
+            result = "Try: 3×3 or 20% of 720";
         }
 
-    } catch(e) { result = "Error. Try: 20% of 720"; }
+    } catch(e) { result = "Error. Try again"; }
 
     document.getElementById('answer').innerHTML = result;
-    saveHistory(originalQ, result.replace(/<[^>]*>/g, '').split('✅ ANSWER:')[1]);
+}
+
+// Voice basic
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+function startVoice() {
+    recognition.start();
+}
+recognition.onresult = (e) => {
+    document.getElementById('problemInput').value = e.results[0][0].transcript;
 }
 </script>
 </body>
