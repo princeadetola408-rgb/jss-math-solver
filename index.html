@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSS MATH SOLVER</title>
+<title>JSS MATH SOLVER - ICLE OFFLINE</title>
 <style>
 body {background:#0a0a0a; color:#fff; font-family:'Segoe UI', sans-serif; text-align:center; padding:20px;}
 h1 {color:#00ff88; text-shadow:0 0 10px #00ff88; font-size:24px; margin:0;}
@@ -16,7 +16,10 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:16px;
 .green {background:linear-gradient(90deg,#00ff88,#00cc66); color:#fff;}
 .purple {background:linear-gradient(90deg,#a855f7,#7e22ce); color:#fff;}
 .red {background:linear-gradient(90deg,#ff0044,#cc0033); color:#fff; width:92%;}
-.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:80px; color:#00ff88;}
+.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:100px; color:#00ff88; white-space:pre-line;}
+.hint {color:#00ff88; font-size:14px; margin-top:10px;}
+.hint span {text-decoration:underline; cursor:pointer;}
+.hint span:hover {color:#fff;}
 .exam {color:#ff9500; font-weight:bold;}
 </style>
 </head>
@@ -28,7 +31,7 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:16px;
 <div class="box">
 <p class="exam">⏰ Exam Mode: <span id="examStatus">OFF</span></p>
 
-<input type="text" id="question" placeholder=" Enter your question ....">
+<input type="text" id="question" placeholder="Enter your question....">
 
 <button class="btn orange" onclick="listen()">🎤 LISTEN</button>
 <button class="btn green" onclick="solve()">✨ SOLVE</button>
@@ -41,50 +44,92 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:16px;
 
 <button class="btn red" onclick="clearAll()">🗑️ CLEAR</button>
 
-<div class="output" id="output">
-Try: 3x3 or 20% of 720 or area of circle radius 7
-</div>
+<div class="output" id="output">Welcome to JSS AI Solver!</div>
+
+<p class="hint">
+Try: <span onclick="fill('3x + 3x')">3x + 3x</span> | 
+<span onclick="fill('20% of 720')">20% of 720</span> | 
+<span onclick="fill('area of circle radius 7')">Area circle r=7</span> |
+<span onclick="fill('3 + 4 * 2')">BODMAS</span>
+</p>
+
 </div>
 
 <script>
 let historyList = [];
 let examMode = false;
 
+function fill(text){
+  document.getElementById('question').value = text;
+  solve();
+}
+
 function solve(){
-  let q = document.getElementById('question').value;
+  let q = document.getElementById('question').value.toLowerCase().trim();
   let ans = "";
   
-  // Simple solver for JSS
-  if(q.includes('x+')){
-    let parts = q.replace('Solve ','').split('+');
-    ans = `Step 1: ${parts[0]} + ${parts[1]}\nStep 2: Add coefficients\nAnswer: ${eval(parts[0].replace('x','1')) + eval(parts[1].replace('x','1'))}x`;
+  // 1. ALGEBRA: 3x + 3x <-- FIXED BUG
+  if(q.match(/\d*x\s*[\+\-]\s*\d*x/)){
+    let parts = q.split(/[\+\-]/);
+    let sign = q.includes('+')? 1 : -1;
+    let coeff1 = parseInt(parts[0].replace('x','')) || 1;
+    let coeff2 = parseInt(parts[1].replace('x','')) || 1;
+    let total = coeff1 + (sign * coeff2);
+    ans = `Step 1: ${q}\nStep 2: Add coefficients: ${coeff1} ${sign>0?'+':'-'} ${coeff2}\nAnswer: ${total}x`;
   }
+  
+  // 2. PERCENTAGE: 20% of 720
   else if(q.includes('% of')){
-    let [p, n] = q.match(/\d+/g);
-    ans = `Step 1: ${p}% of ${n}\nStep 2: ${p}/100 x ${n}\nAnswer: ${(p/100)*n}`;
+    let nums = q.match(/\d+/g);
+    let res = (nums[0]/100)*nums[1];
+    ans = `Step 1: ${nums[0]}% of ${nums[1]}\nStep 2: ${nums[0]}/100 × ${nums[1]}\nAnswer: ${res}`;
   }
-  else if(q.includes('area of circle')){
-    let r = q.match(/\d+/)[0];
-    ans = `Step 1: Area = πr²\nStep 2: 22/7 x ${r} x ${r}\nAnswer: ${(22/7)*r*r}`;
+  
+  // 3. AREA OF CIRCLE
+  else if(q.includes('area') && q.includes('circle')){
+    let r = parseFloat(q.match(/\d+/)[0]);
+    let area = (22/7)*r*r;
+    ans = `Step 1: Area = πr²\nStep 2: 22/7 × ${r} × ${r}\nAnswer: ${area.toFixed(2)} units²`;
   }
+  
+  // 4. BODMAS: 3 + 4 * 2
+  else if(q.match(/[\+\-\*\/]/) &&!q.includes('x')){
+    try{
+      let res = eval(q);
+      ans = `Step 1: Apply BODMAS\nQuestion: ${q}\nAnswer: ${res}`;
+    }catch{ ans = "Check your BODMAS question"; }
+  }
+  
+  // 5. SIMPLE MULTIPLICATION: 3x3
+  else if(q.match(/\d+x\d+/)){
+    let nums = q.match(/\d+/g);
+    ans = `Step 1: ${nums[0]} × ${nums[1]}\nAnswer: ${nums[0]*nums[1]}`;
+  }
+  
   else{
-    try{ ans = "Answer: " + eval(q.replace('Solve ','')); }
-    catch{ ans = "I can solve: 2x+3x, 20% of 100, area of circle"; }
+    ans = `I can solve:\n• Algebra: 2x + 3x, 5x - 2x\n• Percentage: 20% of 100\n• Area: circle, rectangle\n• BODMAS: 3 + 4 * 2\n• Multiplication: 3x3\nType your question!`;
   }
   
   document.getElementById('output').innerText = ans;
-  historyList.push(q + " = " + ans);
+  historyList.push(q + "\n" + ans);
 }
 
 function clearAll(){
   document.getElementById('question').value = "";
-  document.getElementById('output').innerText = "Try: 3x3 or 20% of 720 or area of circle radius 7";
+  document.getElementById('output').innerText = "Welcome to JSS AI Solver!";
 }
-function listen(){ alert("Voice input coming soon!") }
-function speak(){ alert("Speaking answer...") }
-function timer(){ examMode =!examMode; document.getElementById('examStatus').innerText = examMode? "ON" : "OFF"; }
-function savePDF(){ alert("PDF will download") }
-function history(){ alert(historyList.join("\n\n")) }
+function listen(){ alert("🎤 Voice input - Coming in v2!") }
+function speak(){ 
+  let txt = document.getElementById('output').innerText; 
+  if('speechSynthesis' in window){
+    let speech = new SpeechSynthesisUtterance(txt);
+    speech.lang = 'en-NG';
+    window.speechSynthesis.speak(speech);
+  }else{ alert("🔊 Speech not supported") }
+}
+function timer(){ examMode =!examMode; document.getElementById('examStatus').innerText = examMode? "ON 30min" : "OFF"; }
+function savePDF(){ alert("📄 PDF - Will add jsPDF library next") }
+function history(){ alert(historyList.length>0? historyList.slice(-5).join("\n\n---\n\n") : "No history yet") }
 </script>
 </body>
 </html>
