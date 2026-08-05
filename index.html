@@ -21,12 +21,14 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:16px;
 .hint span {text-decoration:underline; cursor:pointer;}
 .hint span:hover {color:#fff;}
 .exam {color:#ff9500; font-weight:bold;}
+.loading {color:#ff9500;}
+.error {color:#ff0044;}
 </style>
 </head>
 <body>
 
-<h1>📱 JSS MATH SOLVER</h1>
-<p class="subtitle">ALL 42 FEATURES + x ÷ FIX!</p>
+<h1>📱 JSS MATH SOLVER AI</h1>
+<p class="subtitle">ALL 42 FEATURES + GROQ AI POWERED!</p>
 
 <div class="box">
 <p class="exam">⏰ Exam Mode: <span id="examStatus">OFF</span></p>
@@ -47,10 +49,10 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:16px;
 <div class="output" id="output">Welcome to JSS AI Solver!</div>
 
 <p class="hint">
-Try: <span onclick="fill('3x + 3x')">3x + 3x</span> | 
-<span onclick="fill('20% of 720')">20% of 720</span> | 
+Try: <span onclick="fill('3x + 3x')">3x + 3x</span> |
+<span onclick="fill('20% of 720')">20% of 720</span> |
 <span onclick="fill('area of circle radius 7')">Area circle r=7</span> |
-<span onclick="fill('3 + 4 * 2')">BODMAS</span>
+<span onclick="fill('solve x^2 + 5x + 6 = 0')">Quadratic</span>
 </p>
 
 </div>
@@ -59,74 +61,100 @@ Try: <span onclick="fill('3x + 3x')">3x + 3x</span> |
 let historyList = [];
 let examMode = false;
 
+// STEP 1: PASTE YOUR gsk_ KEY HERE FROM console.groq.com
+const AI_KEY = "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";
+
 function fill(text){
   document.getElementById('question').value = text;
   solve();
 }
 
-function solve(){
-  let q = document.getElementById('question').value.toLowerCase().trim();
-  let ans = "";
+async function solve(){
+  const outputBox = document.getElementById('output');
+  let q = document.getElementById('question').value.trim();
+  if(q === ""){
+    outputBox.innerHTML = `<span class="error">Please type a question first!</span>`;
+    return;
+  }
   
-  // 1. ALGEBRA: 3x + 3x <-- FIXED BUG
+  outputBox.innerHTML = `<span class="loading">🧠 Thinking...</span>`;
+
+  // TRY LOCAL MATH FIRST
+  let ans = solveLocal(q);
+  if(ans){
+    showAnswer(ans, q);
+    return;
+  }
+  
+  // IF NOT LOCAL, ASK GROQ
+  if(AI_KEY === "gsk_PASTE_YOUR_GROQ_KEY_HERE"){
+    outputBox.innerHTML = `<span class="error">❌ Paste your Groq API key in line 85 first!\nGet free key: console.groq.com</span>`;
+    return;
+  }
+  
+  await askGroq(q);
+}
+
+function solveLocal(q){
+  q = q.toLowerCase();
+  // 1. ALGEBRA: 3x + 3x
   if(q.match(/\d*x\s*[\+\-]\s*\d*x/)){
     let parts = q.split(/[\+\-]/);
     let sign = q.includes('+')? 1 : -1;
     let coeff1 = parseInt(parts[0].replace('x','')) || 1;
     let coeff2 = parseInt(parts[1].replace('x','')) || 1;
     let total = coeff1 + (sign * coeff2);
-    ans = `Step 1: ${q}\nStep 2: Add coefficients: ${coeff1} ${sign>0?'+':'-'} ${coeff2}\nAnswer: ${total}x`;
+    return `Step 1: ${q}\nStep 2: Add coefficients: ${coeff1} ${sign>0?'+':'-'} ${coeff2}\nAnswer: ${total}x`;
   }
-  
-  // 2. PERCENTAGE: 20% of 720
+  // 2. PERCENTAGE
   else if(q.includes('% of')){
     let nums = q.match(/\d+/g);
-    let res = (nums[0]/100)*nums[1];
-    ans = `Step 1: ${nums[0]}% of ${nums[1]}\nStep 2: ${nums[0]}/100 × ${nums[1]}\nAnswer: ${res}`;
+    if(nums) return `Step 1: ${nums[0]}% of ${nums[1]}\nStep 2: ${nums[0]}/100 × ${nums[1]}\nAnswer: ${(nums[0]/100)*nums[1]}`;
   }
-  
-  // 3. AREA OF CIRCLE
+  // 3. AREA
   else if(q.includes('area') && q.includes('circle')){
     let r = parseFloat(q.match(/\d+/)[0]);
     let area = (22/7)*r*r;
-    ans = `Step 1: Area = πr²\nStep 2: 22/7 × ${r} × ${r}\nAnswer: ${area.toFixed(2)} units²`;
+    return `Step 1: Area = πr²\nStep 2: 22/7 × ${r} × ${r}\nAnswer: ${area.toFixed(2)} units²`;
   }
-  
-  // 4. BODMAS: 3 + 4 * 2
-  else if(q.match(/[\+\-\*\/]/) &&!q.includes('x')){
+  // 4. BODMAS
+  else if(q.match(/^[\d\s\+\-\*\/\.]+$/)){
     try{
       let res = eval(q);
-      ans = `Step 1: Apply BODMAS\nQuestion: ${q}\nAnswer: ${res}`;
-    }catch{ ans = "Check your BODMAS question"; }
+      return `Step 1: Apply BODMAS\nQuestion: ${q}\nAnswer: ${res}`;
+    }catch{}
   }
-  
-  // 5. SIMPLE MULTIPLICATION: 3x3
-  else if(q.match(/\d+x\d+/)){
-    let nums = q.match(/\d+/g);
-    ans = `Step 1: ${nums[0]} × ${nums[1]}\nAnswer: ${nums[0]*nums[1]}`;
+  return null; // not local
+}
+
+async function askGroq(question){
+  const outputBox = document.getElementById('output');
+  const prompt = `You are JSS MATH SOLVER for Nigerian JSS students. Solve step by step: "${question}". Keep it simple.`;
+
+  try{
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + AI_KEY },
+      body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: prompt }] })
+    });
+
+    if(!response.ok) throw new Error(`Status ${response.status}`);
+    const data = await response.json();
+    showAnswer(data.choices[0].message.content, question);
+
+  }catch(err){
+    outputBox.innerHTML = `<span class="error">❌ Groq Blocked!\n\nFIX: \n1. Change URL to http://localhost:5500/index.html\n2. Or install "Live Server" VS Code extension\n\nError: ${err.message}</span>`;
   }
-  
-  else{
-    ans = `I can solve:\n• Algebra: 2x + 3x, 5x - 2x\n• Percentage: 20% of 100\n• Area: circle, rectangle\n• BODMAS: 3 + 4 * 2\n• Multiplication: 3x3\nType your question!`;
-  }
-  
+}
+
+function showAnswer(ans, q){
   document.getElementById('output').innerText = ans;
   historyList.push(q + "\n" + ans);
 }
 
-function clearAll(){
-  document.getElementById('question').value = "";
-  document.getElementById('output').innerText = "Welcome to JSS AI Solver!";
-}
+function clearAll(){ document.getElementById('question').value = ""; document.getElementById('output').innerText = "Welcome to JSS AI Solver!"; }
 function listen(){ alert("🎤 Voice input - Coming in v2!") }
-function speak(){ 
-  let txt = document.getElementById('output').innerText; 
-  if('speechSynthesis' in window){
-    let speech = new SpeechSynthesisUtterance(txt);
-    speech.lang = 'en-NG';
-    window.speechSynthesis.speak(speech);
-  }else{ alert("🔊 Speech not supported") }
-}
+function speak(){ let txt = document.getElementById('output').innerText; if('speechSynthesis' in window){ let speech = new SpeechSynthesisUtterance(txt); speech.lang = 'en-NG'; window.speechSynthesis.speak(speech); }else{ alert("🔊 Speech not supported") } }
 function timer(){ examMode =!examMode; document.getElementById('examStatus').innerText = examMode? "ON 30min" : "OFF"; }
 function savePDF(){ alert("📄 PDF - Will add jsPDF library next") }
 function history(){ alert(historyList.length>0? historyList.slice(-5).join("\n\n---\n\n") : "No history yet") }
