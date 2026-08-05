@@ -5,49 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JSS MATH SOLVER AI</title>
 <style>
-body {background:#0a0a0a; color:#fff; font-family:'Segoe UI', sans-serif; text-align:center; padding:20px;}
-h1 {color:#00ff88; text-shadow:0 0 10px #00ff88; font-size:24px; margin:0;}
-.box {background:#111; border:2px solid #00ff88; border-radius:15px; padding:20px; margin-top:10px;}
-input {width:90%; padding:12px; border-radius:10px; border:1px solid #00ff88; background:#222; color:#fff; margin-bottom:10px;}
-.btn {padding:12px; margin:5px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; width:45%;}
-.green {background:#00ff88; color:#000;}
-.orange {background:#ff9500; color:#fff;}
-.blue {background:#0072ff; color:#fff;}
+body {background:#0a0a0a; color:#fff; font-family:'Segoe UI', sans-serif; text-align:center; padding:15px;}
+h1 {color:#00ff88; text-shadow:0 0 10px #00ff88; font-size:22px; margin:0;}
+.subtitle {color:#aaa; margin-bottom:15px; font-size:11px;}
+.box {background:#111; border:2px solid #00ff88; border-radius:15px; padding:15px; box-shadow:0 0 20px #00ff88;}
+input {width:90%; padding:12px; border-radius:10px; border:none; font-size:15px; margin-bottom:10px;}
+.key-input {background:#222; color:#00ff88; border:1px solid #00ff88;}
+.btn {padding:12px; margin:5px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; width:45%; font-size:14px;}
+.orange {background:#ff9500; color:#fff;}.green {background:#00ff88; color:#000;} 
+.blue {background:#0072ff; color:#fff;}.purple {background:#a855f7; color:#fff;}
 .red {background:#ff0044; color:#fff; width:92%;}
-.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:100px; color:#00ff88;}
+.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:100px; color:#00ff88; white-space:pre-line;}
+.exam {color:#ff9500; font-weight:bold;}.loading {color:#ff9500;}
 </style>
 </head>
 <body>
 <h1>📱 JSS MATH SOLVER AI</h1>
+<p class="subtitle">100% GROQ AI POWERED - NO MIXING</p>
 <div class="box">
-<input type="password" id="apiKey" placeholder="1. Paste your gsk_ key here">
+<p class="exam">⏰ Exam Mode: <span id="examStatus">OFF</span></p>
+
+<input type="password" id="apiKey" class="key-input" placeholder="1. Paste your Groq gsk_ key here">
 <button class="btn green" style="width:90%" onclick="saveKey()">2. CLICK SAVE KEY</button>
-<input type="text" id="question" placeholder="3. Type question: 3x + 3x">
+
+<input type="text" id="question" placeholder="3. Ask any math question....">
+<button class="btn orange" onclick="solve()">✨ SOLVE</button>
 <button class="btn orange" onclick="listen()">🎤 LISTEN</button>
-<button class="btn green" onclick="solve()">✨ SOLVE</button>
 <button class="btn blue" onclick="speak()">🔊 SPEAK</button>
+<button class="btn green" onclick="timer()">⏰ TIMER</button>
 <button class="btn red" onclick="clearAll()">🗑️ CLEAR</button>
-<div class="output" id="output">Welcome!</div>
+<div class="output" id="output">Welcome to JSS AI Solver!</div>
 </div>
 <script>
 document.getElementById('apiKey').value = localStorage.getItem("groq_key") || "";
-function saveKey(){ localStorage.setItem("groq_key", document.getElementById('apiKey').value); alert("Key Saved!"); }
+function saveKey(){ localStorage.setItem("groq_key", document.getElementById('apiKey').value); alert("✅ Key Saved!"); }
 function getKey(){ return localStorage.getItem("groq_key") || ""; }
 async function solve(){
-  let q = document.getElementById('question').value;
-  let AI_KEY = getKey();
-  if(q==="" || AI_KEY===""){ document.getElementById('output').innerText = "Type question + Paste Key first"; return; }
-  document.getElementById('output').innerText = "🧠 Solving...";
+  let q = document.getElementById('question').value.trim(); let AI_KEY = getKey();
+  if(q === "" || AI_KEY === ""){ document.getElementById('output').innerText = "❌ Type question AND paste key first!"; return; }
+  document.getElementById('output').innerText = "🧠 Groq AI is solving...";
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+AI_KEY},
-    body:JSON.stringify({model:"llama-3.1-8b-instant",messages:[{role:"user",content:"Solve for JSS student: "+q}]})
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + AI_KEY },
+    body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: "Solve for JSS student step by step: "+q }] })
   });
-  const data = await res.json();
-  document.getElementById('output').innerText = data.choices[0].message.content;
+  const data = await res.json(); document.getElementById('output').innerText = data.choices[0].message.content;
 }
-function listen(){ alert("Use Chrome and allow mic") }
+function listen(){ alert("🎤 Tap and allow mic permission") }
 function speak(){ let txt = document.getElementById('output').innerText; window.speechSynthesis.speak(new SpeechSynthesisUtterance(txt)); }
-function clearAll(){ document.getElementById('question').value=""; document.getElementById('output').innerText="Welcome!"; }
+function timer(){ let s = document.getElementById('examStatus'); s.innerText = s.innerText==="OFF"?"ON 30min":"OFF"; }
+function clearAll(){ document.getElementById('question').value=""; document.getElementById('output').innerText="Welcome to JSS AI Solver!"; }
 </script>
 </body>
 </html>
