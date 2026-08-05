@@ -9,11 +9,11 @@ body {background:#0a0a0a; color:#fff; font-family:'Segoe UI', sans-serif; text-a
 h1 {color:#00ff88; text-shadow:0 0 10px #00ff88; font-size:22px;}
 .box {background:#111; border:2px solid #00ff88; border-radius:15px; padding:15px;}
 input {width:90%; padding:12px; border-radius:10px; border:none; font-size:15px; margin-bottom:10px;}
-.btn {padding:12px; margin:5px; border:none; border-radius:10px; font-weight:bold; width:45%; font-size:14px;}
+.btn {padding:12px; margin:5px; border:none; border-radius:10px; font-weight:bold; width:45%; font-size:14px; cursor:pointer;}
 .orange {background:#ff9500; color:#fff;}.green {background:#00ff88; color:#000;} 
 .blue {background:#0072ff; color:#fff;}.red {background:#ff0044; color:#fff; width:92%;}
-.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:100px; color:#00ff88;}
-.hidden {display:none;} /* THIS HIDES THE KEY BOX */
+.output {background:#000; border-radius:10px; padding:15px; margin-top:15px; text-align:left; min-height:100px; color:#00ff88; white-space:pre-wrap;}
+.hidden {display:none;}
 </style>
 </head>
 <body>
@@ -35,27 +35,60 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:15px;
 <script>
 // AUTO LOAD KEY - NO BUTTON NEEDED
 document.getElementById('apiKey').value = localStorage.getItem("groq_key") || "";
-
 function getKey(){ return localStorage.getItem("groq_key") || ""; }
 
+// REAL VOICE TO TEXT
+function listen(){
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)){
+    alert("Mic not supported. Use Chrome.");
+    return;
+  }
+  let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'en-US';
+  recognition.onstart = () => { document.getElementById('output').innerText = "🎤 Listening... speak now"; }
+  recognition.onresult = (e) => {
+    let text = e.results[0][0].transcript;
+    document.getElementById('question').value = text;
+    document.getElementById('output').innerText = "✅ Got: " + text;
+  }
+  recognition.onerror = () => { document.getElementById('output').innerText = "❌ Mic error. Check permission."; }
+  recognition.start();
+}
+
+// SOLVE WITH GROQ AI
 async function solve(){
   let q = document.getElementById('question').value.trim(); 
   let AI_KEY = getKey();
-  if(q === "" || AI_KEY === ""){ 
-    document.getElementById('output').innerText = "❌ No key found. Open on computer once and paste key in console."; 
+  if(q === ""){ 
+    document.getElementById('output').innerText = "❌ Type a question first"; 
+    return; 
+  }
+  if(AI_KEY === ""){ 
+    document.getElementById('output').innerText = "❌ No key found. Set key in console first."; 
     return; 
   }
   document.getElementById('output').innerText = "🧠 Solving...";
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + AI_KEY },
-    body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: "Solve for JSS student: "+q }] })
-  });
-  const data = await res.json(); 
-  document.getElementById('output').innerText = data.choices[0].message.content;
+  try{
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + AI_KEY },
+      body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: "You are a JSS math teacher. Solve step by step with simple English: "+q }] })
+    });
+    const data = await res.json(); 
+    document.getElementById('output').innerText = data.choices[0].message.content;
+  } catch(e){
+    document.getElementById('output').innerText = "❌ Error. Check internet or key.";
+  }
 }
-function listen(){ alert("🎤 Tap and allow mic") }
-function speak(){ let txt = document.getElementById('output').innerText; window.speechSynthesis.speak(new SpeechSynthesisUtterance(txt)); }
-function clearAll(){ document.getElementById('question').value=""; document.getElementById('output').innerText="Welcome!"; }
+
+function speak(){ 
+  let txt = document.getElementById('output').innerText; 
+  window.speechSynthesis.speak(new SpeechSynthesisUtterance(txt)); 
+}
+
+function clearAll(){ 
+  document.getElementById('question').value=""; 
+  document.getElementById('output').innerText="Welcome to JSS AI Solver!"; 
+}
 </script>
 </body>
 </html>
