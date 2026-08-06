@@ -27,8 +27,7 @@ input {width:90%; padding:12px; border-radius:10px; border:none; font-size:15px;
 <div class="output" id="output">Welcome to JSS AI Solver!</div>
 </div>
 <script>
-// YOUR KEY IS HERE - EVERYONE CAN SEE IT
-const AI_KEY = "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";
+// NO KEY HERE ANYMORE - IT'S SAFE IN BACKEND NOW ✅
 
 // REAL VOICE TO TEXT
 function listen(){
@@ -48,7 +47,7 @@ function listen(){
   recognition.start();
 }
 
-// SOLVE WITH GROQ AI
+// SOLVE WITH YOUR BACKEND
 async function solve(){
   let q = document.getElementById('question').value.trim(); 
   if(q === ""){ 
@@ -57,12 +56,18 @@ async function solve(){
   }
   document.getElementById('output').innerText = "🧠 Solving...";
   try{
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + AI_KEY },
-      body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: "You are a JSS math teacher. Solve step by step with simple English: "+q }] })
+    // THIS IS THE FIX: Call your own backend instead of Groq directly
+    const res = await fetch("/api/solve", {
+      method: "POST", 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q })
     });
     const data = await res.json(); 
-    document.getElementById('output').innerText = data.choices[0].message.content;
+    if(data.error) {
+      document.getElementById('output').innerText = "❌ " + data.error;
+    } else {
+      document.getElementById('output').innerText = data.answer;
+    }
   } catch(e){
     document.getElementById('output').innerText = "❌ Error. Check internet.";
   }
